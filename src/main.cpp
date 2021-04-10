@@ -1,3 +1,5 @@
+#include <omp.h>
+
 #include <iostream>
 
 #include <limits>
@@ -5,18 +7,18 @@
 #include <fstream>
 #include <vector>
 
-#include <glm/glm.hpp>
-#include "glm/ext.hpp"
+#include "vec/vec3.cpp"
+#include "vec/vec4.cpp"
 
-#include <src/Scene.cpp>
+#include "Scene.cpp"
 
-#include <src/Pyramid.cpp>
-#include <src/Light.cpp>
-#include <src/Checkerboard.cpp>
+#include "Pyramid.cpp"
+#include "Light.cpp"
+#include "Checkerboard.cpp"
 
 using namespace std;
 
-void toFile(int width, int height, vector<glm::vec3> framebuffer) {
+void toFile(int width, int height, vector<vec3> framebuffer) {
     ofstream file;
     file.open("./out.ppm");
     file << "P6\n" << width << " " << height << "\n255\n";
@@ -33,8 +35,9 @@ void toFile(int width, int height, vector<glm::vec3> framebuffer) {
 }
 
 void render(int width, int height, int fov) {
-    vector<glm::vec3> framebuffer(width * height);
+    vector<vec3> framebuffer(width * height);
 
+    #pragma omp parallel for
     for (size_t i = 0; i < height; i++) {
         for (size_t j = 0; j < width; j++) {
             float x =  (2 * (j + 0.5) / (float)width  - 1) * tan(fov / 2.) * width / (float)height;

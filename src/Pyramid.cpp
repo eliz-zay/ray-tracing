@@ -3,10 +3,10 @@
 #include <limits>
 #include <cmath>
 
-#include <src/Pyramid.hpp>
+#include "Pyramid.hpp"
 
-#include <src/Scene.cpp>
-#include <src/Material.cpp>
+#include "Scene.cpp"
+#include "Material.cpp"
 
 #define EPS 1e-3
 

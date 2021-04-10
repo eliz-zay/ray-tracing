@@ -1,6 +1,6 @@
 #pragma once
 
-#include <src/Material.hpp>
+#include "Material.hpp"
 
 Material::Material(vec4 albedo, float specularExponent, float refractiveIdx) {
     this->albedo = albedo;

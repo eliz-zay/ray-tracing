@@ -1,6 +1,6 @@
 #pragma once
 
-#include <src/Light.hpp>
+#include "Light.hpp"
 
 Light::Light(vec3 origin, float intensity) {
     this->origin = origin;

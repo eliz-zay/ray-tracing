@@ -4,17 +4,16 @@
 #include <vector>
 #include <string>
 
-#include <glm/glm.hpp>
+#include "vec/vec3.cpp"
+#include "vec/vec4.cpp"
 
-#include <src/Pyramid.hpp>
-#include <src/Light.hpp>
-#include <src/Checkerboard.hpp>
+#include "Pyramid.hpp"
+#include "Light.hpp"
+#include "Checkerboard.hpp"
 
 class Pyramid;
 class Light;
 class Checkerboard;
-
-using namespace glm;
 
 class Scene {
     private:

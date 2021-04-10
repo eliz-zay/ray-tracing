@@ -1,12 +1,12 @@
 #pragma once
 
-#include <src/Scene.hpp>
+#include "Scene.hpp"
 
-#include <src/Pyramid.cpp>
-#include <src/Light.cpp>
-#include <src/Checkerboard.cpp>
-#include <src/Material.cpp>
-#include <src/RayHelper.cpp>
+#include "Pyramid.cpp"
+#include "Light.cpp"
+#include "Checkerboard.cpp"
+#include "Material.cpp"
+#include "RayHelper.cpp"
 
 #define EPS 1e-3
 
@@ -38,7 +38,7 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
 
     float diffuseLightIntensity = 0, specularLightIntensity = 0;
 
-    for (Light* light: Scene::getLights()) {
+    for (Light* light: Scene::lights) {
         vec3 lightDir = normalize(light->getOrigin() - hit);
         float lightDistance = RayHelper::norm(light->getOrigin() - hit);
 
@@ -49,9 +49,10 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
         if (
             Scene::intersect(&shadowOrig, &lightDir, &shadowHit, &shadowNorm, &tmpColor, &tmpMaterial) && 
             RayHelper::norm(shadowHit - shadowOrig) < lightDistance &&
-            albedo[3] < EPS // check
-        )
+            tmpMaterial->getAlbedo()[3] < EPS // check
+        ) {
             continue;
+        }
 
         diffuseLightIntensity += light->getIntensity() * std::max(0.f, dot(lightDir, normal));
         specularLightIntensity += powf(std::max(0.f, dot(-RayHelper::reflect(-lightDir, normal), dir)), material->getSpecularExp()) * light->getIntensity();

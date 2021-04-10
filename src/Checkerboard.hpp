@@ -4,11 +4,10 @@
 #include <vector>
 #include <string>
 
-#include <glm/glm.hpp>
+#include "vec/vec3.cpp"
+#include "vec/vec4.cpp"
 
-#include <src/Material.hpp>
-
-using namespace glm;
+#include "Material.hpp"
 
 class Checkerboard {
     private:

@@ -5,9 +5,8 @@
 #include <vector>
 #include <string>
 
-#include <glm/glm.hpp>
-
-using namespace glm;
+#include "vec/vec3.cpp"
+#include "vec/vec4.cpp"
 
 class Light {
     private:
