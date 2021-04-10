@@ -20,8 +20,7 @@ class Scene {
     private:
         static vec3 backColor;
 
-        // static std::vector<Pyramid*> pyramids;
-        static Pyramid* pyramid;
+        static std::vector<Pyramid*> pyramids;
         static std::vector<Light*> lights;
         static std::vector<Checkerboard*> checkerboards;
 
@@ -34,10 +33,6 @@ class Scene {
         static void addPyramid(Pyramid* pyramid);
         static void addLight(Light* light);
         static void addBoard(Checkerboard* board);
-
-        static vec3 getBackgroundColor();
-        static std::vector<Light*> getLights();
-        static std::vector<Checkerboard*> getCheckerboards();
 };
 
 #endif

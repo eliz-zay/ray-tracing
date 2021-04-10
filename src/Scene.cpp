@@ -11,7 +11,7 @@
 #define EPS 1e-3
 
 vec3 Scene::backColor = vec3(0.556, 0.914, 1.0);
-Pyramid* Scene::pyramid = nullptr;
+std::vector<Pyramid*> Scene::pyramids = {};
 std::vector<Light*> Scene::lights = {};
 std::vector<Checkerboard*> Scene::checkerboards = {};
 
@@ -25,10 +25,12 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
         return Scene::backColor;
     }
 
-    vec3 reflectDir = normalize(RayHelper::reflect(dir, normal));
-    vec3 refractDir = normalize(refract(dir, normal, material->getRefractIdx()));
+    vec4 albedo = material->getAlbedo();
 
-    vec3 reflectOrig = dot(reflectDir, normal) < 0 ? hit - normal * EPS : hit + normal * EPS; // offset the original point to avoid occlusion by the object itself
+    vec3 reflectDir = normalize(RayHelper::reflect(dir, normal));
+    vec3 refractDir = normalize(RayHelper::refract(dir, normal, material->getRefractIdx()));
+
+    vec3 reflectOrig = dot(reflectDir, normal) < 0 ? hit - normal * EPS : hit + normal * EPS;
     vec3 refractOrig = dot(refractDir, normal) < 0 ? hit - normal * EPS : hit + normal * EPS;
 
     vec3 reflectColor = Scene::castRay(reflectOrig, reflectDir, depth + 1);
@@ -44,14 +46,16 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
         vec3 shadowHit, shadowNorm;
         Material* tmpMaterial;
         vec3 tmpColor;
-        if (Scene::intersect(&shadowOrig, &lightDir, &shadowHit, &shadowNorm, &tmpColor, &tmpMaterial) && RayHelper::norm(shadowHit - shadowOrig) < lightDistance)
+        if (
+            Scene::intersect(&shadowOrig, &lightDir, &shadowHit, &shadowNorm, &tmpColor, &tmpMaterial) && 
+            RayHelper::norm(shadowHit - shadowOrig) < lightDistance &&
+            albedo[3] < EPS // check
+        )
             continue;
 
         diffuseLightIntensity += light->getIntensity() * std::max(0.f, dot(lightDir, normal));
         specularLightIntensity += powf(std::max(0.f, dot(-RayHelper::reflect(-lightDir, normal), dir)), material->getSpecularExp()) * light->getIntensity();
     }
-
-    vec4 albedo = material->getAlbedo();
 
     return 
         color * diffuseLightIntensity * albedo[0] + 
@@ -61,20 +65,36 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
 }
 
 bool Scene::intersect(vec3* origin, vec3* dir, vec3* hit, vec3* normal, vec3* color, Material** material) {
-    float pyroDist = -1, checkerDist = -1, distance;
+    float pyroDist = std::numeric_limits<float>::max(); 
+    float checkerDist = -1, distance;
     vec3 pyroColor, checkerColor;
     vec3 pyroNormal, checkerNormal;
+    Material* pyroMaterial;
+    bool checkerIntersect, pyroIntersect = false;
 
-    Scene::pyramid->intersection(*origin, *dir, &pyroDist, &pyroColor, &pyroNormal);
-    Scene::checkerboards[0]->intersection(*origin, *dir, &checkerDist, &checkerColor, &checkerNormal);
+    for (Pyramid* pyro: Scene::pyramids) {
+        vec3 iColor, iNormal;
+        float iDist;
+        Material* iMaterial;
 
-    if (fabs(pyroDist + 1) < EPS && fabs(checkerDist + 1) < EPS) {
+        if (pyro->intersection(*origin, *dir, &iDist, &iColor, &iNormal) && iDist < pyroDist) {
+            pyroIntersect = true;
+            pyroDist = iDist;
+            pyroColor = iColor;
+            pyroNormal = iNormal;
+            pyroMaterial = pyro->getMaterial();
+        }
+    }
+
+    checkerIntersect = Scene::checkerboards[0]->intersection(*origin, *dir, &checkerDist, &checkerColor, &checkerNormal);
+
+    if (!pyroIntersect && !checkerIntersect) {
         return false;
-    } else if (pyroDist > 0 && ((checkerDist > 0 && pyroDist < checkerDist) || (fabs(checkerDist + 1) < EPS))) {
+    } else if (pyroIntersect && (!checkerIntersect || (pyroDist < checkerDist))) {
         distance = pyroDist;
         *color = pyroColor;
         *normal = pyroNormal;
-        *material = Scene::pyramid->getMaterial();
+        *material = pyroMaterial;
     } else {
         distance = checkerDist;
         *color = checkerColor;
@@ -87,12 +107,8 @@ bool Scene::intersect(vec3* origin, vec3* dir, vec3* hit, vec3* normal, vec3* co
     return true;
 }
 
-vec3 Scene::getBackgroundColor() {
-    return Scene::backColor;
-}
-
 void Scene::addPyramid(Pyramid* pyramid) {
-    Scene::pyramid = pyramid;
+    Scene::pyramids.push_back(pyramid);
 }
 
 void Scene::addLight(Light* light) {
@@ -101,12 +117,4 @@ void Scene::addLight(Light* light) {
 
 void Scene::addBoard(Checkerboard* board) {
     Scene::checkerboards.push_back(board);
-}
-
-std::vector<Light*> Scene::getLights() {
-    return Scene::lights;
-}
-
-std::vector<Checkerboard*> Scene::getCheckerboards() {
-    return Scene::checkerboards;
 }

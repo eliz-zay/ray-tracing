@@ -16,7 +16,7 @@ namespace RayHelper {
     vec3 refract(vec3 ray, vec3 normal, float eta_t, const float eta_i = 1.f) { // Snell's law
         float cosi = -std::max(-1.f, std::min(1.f, dot(ray, normal)));
         if (cosi < 0) {
-            return refract(ray, -normal, eta_i, eta_t); // if the ray comes from the inside the object, swap the air and the media
+            return refract(ray, -normal, eta_i, eta_t);
         }
 
         float eta = eta_i / eta_t;

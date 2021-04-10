@@ -41,6 +41,8 @@ bool Checkerboard::intersection(vec3 orig, vec3 dir, float* distance, vec3* colo
         *distance = hitDistance;
         *color = (int(.5 * hit.x + 1000) + int(.5 * hit.z)) & 1 ? this->color.first : this->color.second;
         *normal = vec3(0, 1, 0); // only for horizontal board
+    } else {
+        return false;
     }
 
     return true;

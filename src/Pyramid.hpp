@@ -32,7 +32,7 @@ class Pyramid {
         float triangleIntersection(vec3 origin, vec3 dir, vec3 vert1, vec3 vert2, vec3 vert3);
 
     public:
-        Pyramid(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3, vec3 vert4, vec4 albedo, float specularExp, float refractiveIdx);
+        Pyramid(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3, vec3 vert4, vec3 color, vec4 albedo, float specularExp, float refractiveIdx);
 
         bool intersection(vec3 origin, vec3 dir, float* distance, vec3* color, vec3* normal);
 

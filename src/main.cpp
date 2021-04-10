@@ -57,32 +57,45 @@ int main() {
     Light* light3 = new Light(vec3(3, 2, -16), 3.f);
 
     Pyramid* pyramid1 = new Pyramid(
-        vec3(0, 2, -12),
+        vec3(0, 2, -12),            // vertices
         vec3(-2, -2, -10),
         vec3(-2, -3, -14),
         vec3(4, -3, -14),
         vec3(2, -2, -10),
-        vec4(0.5, 0.5, 0.1, 0.8),
-        125., 
-        3.5
+        vec3(0.6, 0.7, 0.8),        // color
+        vec4(0.0, 0.5, 0.1, 0.8),   // albedo
+        125.,                       // specularExp
+        1.5                         // refractiveIdx
+    );
+
+    Pyramid* pyramid2 = new Pyramid(
+        vec3(2, 2, -20),            // vertices
+        vec3(0, -2, -18),
+        vec3(0, -3, -22),
+        vec3(6, -3, -22),
+        vec3(6, -2, -18),
+        vec3(0.3, 0.1, 0.1),        // color
+        vec4(0.9,  0.1, 0.0, 0.0),  // albedo
+        50.,                        // specularExp
+        1.                          // refractiveIdx
     );
 
     Checkerboard* board = new Checkerboard(
-        std::make_pair(vec3(1, 1, 1), vec3(1, .7, .3)),
-        -4,
-        10,
-        -30,
-        -10,
-        vec4(0.5, 0.4, 0.0, 0.0),
-        50.,
-        1.
-    );
+        std::make_pair(vec3(1, 1, 1), vec3(1, .7, .3)), //colors
+        -4, // y
+        10, // x bounds
+        -30,    //z1
+        -10,    //z2
+        vec4(0.5, 0.4, 0.0, 0.0),   //albedo
+        50.,                        // specularExp
+        1.                          // refractiveIdx
+    );  
 
     Scene::addPyramid(pyramid1);
-    // Scene::addPyramid(pyramid2);
-    // Scene::addLight(light1);
-    // Scene::addLight(light2);
-    Scene::addLight(light3);
+    Scene::addPyramid(pyramid2);
+    Scene::addLight(light1);
+    Scene::addLight(light2);
+    // Scene::addLight(light3);
     Scene::addBoard(board);
 
     render(width, height, fov);

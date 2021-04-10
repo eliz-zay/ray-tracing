@@ -20,7 +20,7 @@ class Checkerboard {
     public:
         Checkerboard(
             std::pair<vec3, vec3> color, 
-            float equationY, 
+            float equationY,    // everything only for horizontal board (y = equationY)
             float borderX, 
             float lowBorderZ, 
             float uppBorderZ, 

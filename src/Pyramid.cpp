@@ -10,21 +10,11 @@
 
 #define EPS 1e-3
 
-Pyramid::Pyramid(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3, vec3 vert4, vec4 albedo, float specularExp, float refractiveIdx): 
+Pyramid::Pyramid(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3, vec3 vert4, vec3 color, vec4 albedo, float specularExp, float refractiveIdx): 
 vertices(vert0, vert1, vert2, vert3, vert4) {
-    // this->edgeColor.insert({0, vec3(0.0, 0.2, 0.8)});
-    // this->edgeColor.insert({1, vec3(0.6, 0.0, 0.4)});
-    // this->edgeColor.insert({2, vec3(0.0, 0.2, 0.8)});
-    // this->edgeColor.insert({3, vec3(0.6, 0.0, 0.4)});
-    // this->edgeColor.insert({4, vec3(0.3, 0.0, 0.1)});
-    // this->edgeColor.insert({5, vec3(0.3, 0.0, 0.1)});
-
-    this->edgeColor.insert({0, vec3(0.6, 0.7, 0.8)});
-    this->edgeColor.insert({1, vec3(0.6, 0.7, 0.8)});
-    this->edgeColor.insert({2, vec3(0.6, 0.7, 0.8)});
-    this->edgeColor.insert({3, vec3(0.6, 0.7, 0.8)});
-    this->edgeColor.insert({4, vec3(0.6, 0.7, 0.8)});
-    this->edgeColor.insert({5, vec3(0.6, 0.7, 0.8)});
+    for (int i = 0; i < 6; i++) {
+        this->edgeColor.insert({i, color});
+    }
 
     this->edgeCoord.insert({0, {this->vertices.upper, this->vertices.base[0], this->vertices.base[1]}});
     this->edgeCoord.insert({1, {this->vertices.upper, this->vertices.base[1], this->vertices.base[2]}});
