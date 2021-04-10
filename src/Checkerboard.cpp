@@ -3,30 +3,49 @@
 #include <src/Checkerboard.hpp>
 
 #include <src/Scene.cpp>
+#include <src/Material.cpp>
 
-Checkerboard::Checkerboard(std::pair<vec3, vec3> color, float equationY, float borderX, float lowBorderZ, float uppBorderZ) {
+Checkerboard::Checkerboard(
+    std::pair<vec3, vec3> color, 
+    float equationY, 
+    float borderX, 
+    float lowBorderZ, 
+    float uppBorderZ, 
+    vec4 albedo, 
+    float specularExp,
+    float refractiveIdx
+) {
     this->color = color;
     this->equationY = equationY;
     this->borderX = borderX;
     this->lowBorderZ = lowBorderZ;
     this->uppBorderZ = uppBorderZ;
+
+    this->material = new Material(albedo, specularExp, refractiveIdx);
 }
 
-void Checkerboard::castRay(vec3 orig, vec3 dir, float* checkerDist, vec3* color) {
-    *checkerDist = -1;
-    *color = Scene::getBackgroundColor();
-
-    if (fabs(dir.y) > 1e-3)  {
-        float hitDistance = -(orig.y - this->equationY) / dir.y;
-        vec3 hit = orig + dir * hitDistance;
-        if (
-            hitDistance > 0 && 
-            fabs(hit.x) < this->borderX && 
-            hit.z < this->uppBorderZ && 
-            hit.z > this->lowBorderZ
-        ) {
-            *checkerDist = hitDistance;
-            *color = (int(.5 * hit.x + 1000) + int(.5 * hit.z)) & 1 ? this->color.first : this->color.second;
-        }
+bool Checkerboard::intersection(vec3 orig, vec3 dir, float* distance, vec3* color, vec3* normal) {
+    if (fabs(dir.y) < 1e-3)  { // only for horizontal board
+        *distance = -1;
+        return false;
     }
+
+    float hitDistance = -(orig.y - this->equationY) / dir.y;
+    vec3 hit = orig + dir * hitDistance;
+    if (
+        hitDistance > 0 && 
+        fabs(hit.x) < this->borderX && 
+        hit.z < this->uppBorderZ && 
+        hit.z > this->lowBorderZ
+    ) {
+        *distance = hitDistance;
+        *color = (int(.5 * hit.x + 1000) + int(.5 * hit.z)) & 1 ? this->color.first : this->color.second;
+        *normal = vec3(0, 1, 0); // only for horizontal board
+    }
+
+    return true;
+}
+
+Material* Checkerboard::getMaterial() {
+    return this->material;
 }

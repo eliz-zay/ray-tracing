@@ -7,6 +7,8 @@
 
 #include <glm/glm.hpp>
 
+#include <src/Material.hpp>
+
 using namespace glm;
 
 struct Vertices {
@@ -25,17 +27,16 @@ class Pyramid {
         std::map<int, vec3> edgeColor;
         std::map<int, std::vector<vec3> > edgeCoord;
 
-        vec2 albedo;
-        float specularExponent;
+        Material* material;
 
         float triangleIntersection(vec3 origin, vec3 dir, vec3 vert1, vec3 vert2, vec3 vert3);
-        vec3 reflect(vec3 ray, vec3 normal);
 
     public:
-        Pyramid(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3, vec3 vert4, vec2 albedo, float specularExponent);
+        Pyramid(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3, vec3 vert4, vec4 albedo, float specularExp, float refractiveIdx);
 
-        void pyroIntersection(vec3 origin, vec3 dir, float* distance, int* triangleIdx);
-        void castRay(vec3 origin, vec3 dir, float* distance, vec3* color);
+        bool intersection(vec3 origin, vec3 dir, float* distance, vec3* color, vec3* normal);
+
+        Material* getMaterial();
         vec3 getNormal(int edgeIdx);
 };
 

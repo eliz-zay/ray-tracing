@@ -32,7 +32,7 @@ void toFile(int width, int height, vector<glm::vec3> framebuffer) {
     file.close();
 }
 
-void render(int width, int height, int fov, Pyramid* pyramid) {
+void render(int width, int height, int fov) {
     vector<glm::vec3> framebuffer(width * height);
 
     for (size_t i = 0; i < height; i++) {
@@ -40,7 +40,7 @@ void render(int width, int height, int fov, Pyramid* pyramid) {
             float x =  (2 * (j + 0.5) / (float)width  - 1) * tan(fov / 2.) * width / (float)height;
             float y = -(2 * (i + 0.5) / (float)height - 1) * tan(fov / 2.);
             vec3 dir = normalize(vec3(x, y, -1));
-            framebuffer[i * width + j] = Scene::intersect(vec3(0, 0, 0), dir);
+            framebuffer[i * width + j] = Scene::castRay(vec3(0, 0, 0), dir);
         }
     }
 
@@ -52,33 +52,40 @@ int main() {
     const int height = 768;
     const int fov = M_PI / 2.;
 
-    Light* light1 = new Light(vec3(4, -4, -8), 3.f);
+    Light* light1 = new Light(vec3(4, 0, -8), 3.f);
     Light* light2 = new Light(vec3(0, 6, -9), 3.f);
+    Light* light3 = new Light(vec3(3, 2, -16), 3.f);
 
-    Pyramid* pyramid = new Pyramid(
+    Pyramid* pyramid1 = new Pyramid(
         vec3(0, 2, -12),
         vec3(-2, -2, -10),
         vec3(-2, -3, -14),
         vec3(4, -3, -14),
         vec3(2, -2, -10),
-        vec2(0.6, 0.3),
-        50.
+        vec4(0.5, 0.5, 0.1, 0.8),
+        125., 
+        3.5
     );
 
     Checkerboard* board = new Checkerboard(
-        std::make_pair(vec3(1,1,1), vec3(1, .7, .3)),
+        std::make_pair(vec3(1, 1, 1), vec3(1, .7, .3)),
         -4,
         10,
         -30,
-        -10
+        -10,
+        vec4(0.5, 0.4, 0.0, 0.0),
+        50.,
+        1.
     );
 
-    Scene::addPyramid(pyramid);
-    Scene::addLight(light1);
-    Scene::addLight(light2);
+    Scene::addPyramid(pyramid1);
+    // Scene::addPyramid(pyramid2);
+    // Scene::addLight(light1);
+    // Scene::addLight(light2);
+    Scene::addLight(light3);
     Scene::addBoard(board);
 
-    render(width, height, fov, pyramid);
+    render(width, height, fov);
 
     return 0;
 }

@@ -20,6 +20,7 @@ class Scene {
     private:
         static vec3 backColor;
 
+        // static std::vector<Pyramid*> pyramids;
         static Pyramid* pyramid;
         static std::vector<Light*> lights;
         static std::vector<Checkerboard*> checkerboards;
@@ -27,14 +28,14 @@ class Scene {
         Scene();
 
     public:
-        static vec3 intersect(vec3 origin, vec3 dir);
+        static vec3 castRay(vec3 origin, vec3 dir, int depth);
+        static bool intersect(vec3* origin, vec3* dir, vec3* hit, vec3* normal, vec3* color, Material** material);
 
         static void addPyramid(Pyramid* pyramid);
         static void addLight(Light* light);
         static void addBoard(Checkerboard* board);
 
         static vec3 getBackgroundColor();
-        static Pyramid* getPyramid();
         static std::vector<Light*> getLights();
         static std::vector<Checkerboard*> getCheckerboards();
 };
