@@ -2,10 +2,15 @@
 
 #include "Material.hpp"
 
-Material::Material(vec4 albedo, float specularExponent, float refractiveIdx) {
+Material::Material(string name, vec4 albedo, float specularExponent, float refractiveIdx) {
+    this->name = name;
     this->albedo = albedo;
     this->specularExp = specularExponent;
     this->refractiveIdx = refractiveIdx;
+}
+
+string Material::getName() {
+    return this->name;
 }
 
 vec4 Material::getAlbedo() {

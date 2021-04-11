@@ -40,6 +40,20 @@ class vec3 {
             return *this *= 1/t;
         }
 
+        bool operator==(const vec3 &v) {
+            const float EPS = 1e-2;
+
+            if (
+                fabs(e[0] - v.e[0]) < EPS &&
+                fabs(e[1] - v.e[1]) < EPS &&
+                fabs(e[2] - v.e[2]) < EPS
+            ) {
+                return true;
+            }
+
+            return false;
+        }
+
         float norm() const {
             return sqrt(norm_squared());
         }

@@ -10,6 +10,8 @@
 
 #include "Material.hpp"
 
+using namespace std;
+
 struct Vertices {
     vec3 upper;
     std::vector<vec3> base;
@@ -28,12 +30,14 @@ class Pyramid {
 
         Material* material;
 
-        float triangleIntersection(vec3 origin, vec3 dir, vec3 vert1, vec3 vert2, vec3 vert3);
+        bool triangleIntersection(vec3 origin, vec3 dir, vec3 vert1, vec3 vert2, vec3 vert3, float* distance);
 
     public:
-        Pyramid(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3, vec3 vert4, vec3 color, vec4 albedo, float specularExp, float refractiveIdx);
+        Pyramid(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3, vec3 vert4, vec3 color);
 
         bool intersection(vec3 origin, vec3 dir, float* distance, vec3* color, vec3* normal);
+
+        void setMaterial(Material* material);
 
         Material* getMaterial();
         vec3 getNormal(int edgeIdx);

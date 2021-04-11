@@ -8,7 +8,7 @@
 #include "Material.cpp"
 #include "RayHelper.cpp"
 
-#define EPS 1e-3
+#define EPS 1e-4
 
 vec3 Scene::backColor = vec3(0.556, 0.914, 1.0);
 std::vector<Pyramid*> Scene::pyramids = {};
@@ -21,7 +21,7 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
 
     bool isIntersect = Scene::intersect(&origin, &dir, &hit, &normal, &color, &material);
 
-    if (!isIntersect or depth > 4) {
+    if (!isIntersect || depth > 4) {
         return Scene::backColor;
     }
 
@@ -40,7 +40,7 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
 
     for (Light* light: Scene::lights) {
         vec3 lightDir = normalize(light->getOrigin() - hit);
-        float lightDistance = RayHelper::norm(light->getOrigin() - hit);
+        float lightDistance = (light->getOrigin() - hit).norm();
 
         vec3 shadowOrig = dot(lightDir, normal) < 0 ? hit - normal * EPS : hit + normal * EPS;
         vec3 shadowHit, shadowNorm;
@@ -48,14 +48,15 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
         vec3 tmpColor;
         if (
             Scene::intersect(&shadowOrig, &lightDir, &shadowHit, &shadowNorm, &tmpColor, &tmpMaterial) && 
-            RayHelper::norm(shadowHit - shadowOrig) < lightDistance &&
-            tmpMaterial->getAlbedo()[3] < EPS // check
+            (shadowHit - shadowOrig).norm() < lightDistance
         ) {
-            continue;
+            if (tmpMaterial->getAlbedo()[3] < EPS) {
+                continue;
+            }
         }
 
         diffuseLightIntensity += light->getIntensity() * std::max(0.f, dot(lightDir, normal));
-        specularLightIntensity += powf(std::max(0.f, dot(-RayHelper::reflect(-lightDir, normal), dir)), material->getSpecularExp()) * light->getIntensity();
+        specularLightIntensity += light->getIntensity() * powf(std::max(0.f, dot(-RayHelper::reflect(-lightDir, normal), dir)), material->getSpecularExp());
     }
 
     return 

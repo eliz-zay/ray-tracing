@@ -10,18 +10,13 @@ Checkerboard::Checkerboard(
     float equationY, 
     float borderX, 
     float lowBorderZ, 
-    float uppBorderZ, 
-    vec4 albedo, 
-    float specularExp,
-    float refractiveIdx
+    float uppBorderZ
 ) {
     this->color = color;
     this->equationY = equationY;
     this->borderX = borderX;
     this->lowBorderZ = lowBorderZ;
     this->uppBorderZ = uppBorderZ;
-
-    this->material = new Material(albedo, specularExp, refractiveIdx);
 }
 
 bool Checkerboard::intersection(vec3 orig, vec3 dir, float* distance, vec3* color, vec3* normal) {
@@ -46,6 +41,10 @@ bool Checkerboard::intersection(vec3 orig, vec3 dir, float* distance, vec3* colo
     }
 
     return true;
+}
+
+void Checkerboard::setMaterial(Material* material) {
+    this->material = material;
 }
 
 Material* Checkerboard::getMaterial() {

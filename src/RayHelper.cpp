@@ -4,23 +4,23 @@
 #include "vec/vec4.cpp"
 
 namespace RayHelper {
-    float norm(vec3 vec) {
-        return std::sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
-    }
-
     vec3 reflect(vec3 ray, vec3 normal) {
-        return ray - normal * 2.f * dot(ray, normal);
+        return ray -  2.f * dot(ray, normal) * normal;
     }
 
-    vec3 refract(vec3 ray, vec3 normal, float eta_t, const float eta_i = 1.f) { // Snell's law
-        float cosi = -std::max(-1.f, std::min(1.f, dot(ray, normal)));
-        if (cosi < 0) {
-            return refract(ray, -normal, eta_i, eta_t);
+    vec3 refract(vec3 ray, vec3 normal, float etaTarget, float etaIn = 1.f) { // Snell's law
+        float cos1 = -dot(ray, normal);
+        if (cos1 < 0.f) { // ray goes from inside the pyramid
+            return refract(ray, -normal, etaIn, etaTarget);
         }
 
-        float eta = eta_i / eta_t;
-        float k = 1 - eta * eta * (1 - cosi * cosi);
+        float eta = etaIn / etaTarget;
+        float sin2 = eta * sqrtf(1 - cos1 * cos1);
 
-        return k < 0 ? vec3(1,0,0) : ray * eta + normal * (eta * cosi - sqrtf(k));
+        if (sin2 > 1.f) { // total internal reflection
+            return reflect(ray, normal);
+        }
+
+        return eta * ray + normal * (eta * cos1 - sqrtf(1 - sin2 * sin2));
     }
 }

@@ -22,13 +22,12 @@ class Checkerboard {
             float equationY,    // everything only for horizontal board (y = equationY)
             float borderX, 
             float lowBorderZ, 
-            float uppBorderZ, 
-            vec4 albedo, 
-            float specularExponent,
-            float refractiveIdx
+            float uppBorderZ
         );
 
         bool intersection(vec3 orig, vec3 dir, float* distance, vec3* color, vec3* normal);
+
+        void setMaterial(Material* material);
         
         Material* getMaterial();
 };
