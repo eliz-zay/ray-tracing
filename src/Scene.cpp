@@ -2,18 +2,20 @@
 
 #include "Scene.hpp"
 
+#include "Object.cpp"
 #include "Pyramid.cpp"
 #include "Light.cpp"
 #include "Checkerboard.cpp"
+#include "Plane.cpp"
 #include "Material.cpp"
 #include "RayHelper.cpp"
 
 #define EPS 1e-4
 
 vec3 Scene::backColor = vec3(0.556, 0.914, 1.0);
-std::vector<Pyramid*> Scene::pyramids = {};
-std::vector<Light*> Scene::lights = {};
-std::vector<Checkerboard*> Scene::checkerboards = {};
+
+vector<Object*> Scene::objects = {};
+vector<Light*> Scene::lights = {};
 
 vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
     vec3 color, normal, hit;
@@ -35,6 +37,8 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
 
     vec3 reflectColor = Scene::castRay(reflectOrig, reflectDir, depth + 1);
     vec3 refractColor = Scene::castRay(refractOrig, refractDir, depth + 1);
+
+    float reflectWeight = RayHelper::SchlickApproximation(dir, normal, material->getRefractIdx());
 
     float diffuseLightIntensity = 0, specularLightIntensity = 0;
 
@@ -62,61 +66,45 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
     return 
         color * diffuseLightIntensity * albedo[0] + 
         vec3(1, 1, 1) * specularLightIntensity * albedo[1] +
-        reflectColor * albedo[2] +
-        refractColor * albedo[3];
+        reflectColor * albedo[2] * reflectWeight +
+        refractColor * albedo[3] * (1 - reflectWeight);
 }
 
 bool Scene::intersect(vec3* origin, vec3* dir, vec3* hit, vec3* normal, vec3* color, Material** material) {
-    float pyroDist = std::numeric_limits<float>::max(); 
-    float checkerDist = -1, distance;
-    vec3 pyroColor, checkerColor;
-    vec3 pyroNormal, checkerNormal;
-    Material* pyroMaterial;
-    bool checkerIntersect, pyroIntersect = false;
+    float hitDist = std::numeric_limits<float>::max();
+    bool hitScene = false;
+    vec3 hitColor, hitNormal;
 
-    for (Pyramid* pyro: Scene::pyramids) {
+    Object* hitObj;
+
+    for (Object* obj: Scene::objects) {
         vec3 iColor, iNormal;
         float iDist;
-        Material* iMaterial;
-
-        if (pyro->intersection(*origin, *dir, &iDist, &iColor, &iNormal) && iDist < pyroDist) {
-            pyroIntersect = true;
-            pyroDist = iDist;
-            pyroColor = iColor;
-            pyroNormal = iNormal;
-            pyroMaterial = pyro->getMaterial();
+        if (obj->intersection(*origin, *dir, &iDist, &iColor, &iNormal) && iDist < hitDist) {
+            hitScene = true;
+            hitDist = iDist;
+            hitNormal = iNormal;
+            hitColor = iColor;
+            hitObj = obj;
         }
     }
 
-    checkerIntersect = Scene::checkerboards[0]->intersection(*origin, *dir, &checkerDist, &checkerColor, &checkerNormal);
-
-    if (!pyroIntersect && !checkerIntersect) {
+    if (!hitScene) {
         return false;
-    } else if (pyroIntersect && (!checkerIntersect || (pyroDist < checkerDist))) {
-        distance = pyroDist;
-        *color = pyroColor;
-        *normal = pyroNormal;
-        *material = pyroMaterial;
-    } else {
-        distance = checkerDist;
-        *color = checkerColor;
-        *normal = checkerNormal;
-        *material = Scene::checkerboards[0]->getMaterial();
     }
 
-    *hit = (*origin) + (*dir) * distance;
+    *hit = (*origin) + (*dir) * hitDist;
+    *normal = hitNormal;
+    *color = hitColor;
+    *material = hitObj->getMaterial();
 
     return true;
 }
 
-void Scene::addPyramid(Pyramid* pyramid) {
-    Scene::pyramids.push_back(pyramid);
+void Scene::addObject(Object* obj) {
+    Scene::objects.push_back(obj);
 }
 
 void Scene::addLight(Light* light) {
     Scene::lights.push_back(light);
-}
-
-void Scene::addBoard(Checkerboard* board) {
-    Scene::checkerboards.push_back(board);
 }

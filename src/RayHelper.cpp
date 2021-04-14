@@ -23,4 +23,17 @@ namespace RayHelper {
 
         return eta * ray + normal * (eta * cos1 - sqrtf(1 - sin2 * sin2));
     }
+
+    float SchlickApproximation(vec3 ray, vec3 normal, float etaTarget, float etaIn = 1.f) { // Schlick
+        float cos = -dot(ray, normal);
+        if (cos < 0.f) { // ray goes from inside the pyramid
+            return SchlickApproximation(ray, -normal, etaIn, etaTarget);
+        }
+
+        float eta = etaIn / etaTarget;
+
+        float R0 = std::pow(eta - 1, 2) / std::powf(eta + 1, 2);
+
+        return R0 + (1 - R0) * std::pow(1 - cos, 5);
+    }
 }

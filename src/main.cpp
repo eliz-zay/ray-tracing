@@ -15,6 +15,7 @@
 #include "Pyramid.cpp"
 #include "Light.cpp"
 #include "Checkerboard.cpp"
+#include "Plane.cpp"
 
 using namespace std;
 
@@ -55,63 +56,60 @@ int main() {
     const int height = 768;
     const int fov = M_PI / 2.;
 
-    Light* light1 = new Light(vec3(0, -1, -12), 3.f);
+    Material* glass = new Material("glass", vec4(0.0, 0.5, 0.1, 0.8), 125., 1.5);
+    Material* rubber = new Material("rubber", vec4(0.9,  0.1, 0.0, 0.0), 50., 1.);
+    Material* plastic = new Material("plastic", vec4(0.5, 0.4, 0.0, 0.0), 50., 1.);
+
+    Light* light1 = new Light(vec3(0, 0, -12), 3.f);
     Light* light2 = new Light(vec3(0, 6, -9), 3.f);
     Light* light3 = new Light(vec3(3, 2, -16), 3.f);
 
     Pyramid* pyramid1 = new Pyramid(
-        vec3(0, 1, -12),            // vertices
-        vec3(-2, -3, -10),
-        vec3(-2, -3, -14),
-        vec3(2, -3, -14),
-        vec3(2, -3, -10),
+        vec3(0, 3, -12),            // vertices
+        vec3(-2, -1, -10),
+        vec3(-2, -1, -14),
+        vec3(2, -1, -14),
+        vec3(2, -1, -10),
         vec3(1, 1, 1)        // color
     );
 
-    pyramid1->setMaterial(new Material(
-        "glass",
-        vec4(0.0, 0.5, 0.1, 0.8),   // albedo
-        125.,                       // specularExp
-        1.5                         // refractiveIdx
-    ));
-
     Pyramid* pyramid2 = new Pyramid(
         vec3(1, 2, -20),            // vertices
-        vec3(-1, -2, -18),
-        vec3(-1, -3, -22),
-        vec3(5, -3, -22),
-        vec3(5, -2, -18),
+        vec3(-1, 0, -18),
+        vec3(-1, -1, -22),
+        vec3(5, -1, -22),
+        vec3(5, 0, -18),
         vec3(0.3, 0.1, 0.1)        // color
     );
 
-    pyramid2->setMaterial(new Material(
-        "rubber",
-        vec4(0.9,  0.1, 0.0, 0.0),  // albedo
-        50.,                        // specularExp
-        1.                          // refractiveIdx
-    ));
-
     Checkerboard* board = new Checkerboard(
         std::make_pair(vec3(1, 1, 1), vec3(1, .7, .3)), //colors
-        -4, // y
+        -2, // y
         10, // x bounds
         -40,    //z1
         -10    //z2
     );
 
-    board->setMaterial(new Material(
-        "plastic",
-        vec4(0.5, 0.4, 0.0, 0.0),   //albedo
-        50.,                        // specularExp
-        1.                          // refractiveIdx
-    ));
+    Plane* plane = new Plane(
+        10,
+        10,
+        vec3(7, 0, -20),
+        vec3(1, 0, 0),
+        vec3(0.3, 0.1, 0.1)
+    );
 
-    Scene::addPyramid(pyramid1);
-    // Scene::addPyramid(pyramid2);
-    // Scene::addLight(light1);
+    pyramid1->setMaterial(glass);
+    pyramid2->setMaterial(rubber);
+    board->setMaterial(plastic);
+    plane->setMaterial(rubber);
+
+    // Scene::addObject(pyramid1);
+    // Scene::addObject(pyramid2);
+    Scene::addLight(light1);
     Scene::addLight(light2);
-    // Scene::addLight(light3);
-    Scene::addBoard(board);
+    Scene::addLight(light3);
+    Scene::addObject(board);
+    Scene::addObject(plane); 
 
     render(width, height, fov);
 

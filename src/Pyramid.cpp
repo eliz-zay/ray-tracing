@@ -97,14 +97,6 @@ bool Pyramid::triangleIntersection(vec3 orig, vec3 dir, vec3 vert1, vec3 vert2, 
     return true;
 }
 
-void Pyramid::setMaterial(Material* material) {
-    this->material = material;
-}
-
-Material* Pyramid::getMaterial() {
-    return this->material;
-}
-
 vec3 Pyramid::getNormal(int edgeIdx) {
     std::vector<vec3> vertices = this->edgeCoord[edgeIdx];
 

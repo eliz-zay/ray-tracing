@@ -34,19 +34,11 @@ bool Checkerboard::intersection(vec3 orig, vec3 dir, float* distance, vec3* colo
         hit.z() > this->lowBorderZ
     ) {
         *distance = hitDistance;
-        *color = (int(.5 * hit.x() + 1000) + int(.5 * hit.z())) & 1 ? this->color.first : this->color.second;
+        *color = (int(hit.x() + 1000) + int(hit.z())) & 1 ? this->color.first : this->color.second;
         *normal = vec3(0, 1, 0); // only for horizontal board
     } else {
         return false;
     }
 
     return true;
-}
-
-void Checkerboard::setMaterial(Material* material) {
-    this->material = material;
-}
-
-Material* Checkerboard::getMaterial() {
-    return this->material;
 }

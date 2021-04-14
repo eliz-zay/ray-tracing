@@ -8,6 +8,7 @@
 #include "vec/vec3.cpp"
 #include "vec/vec4.cpp"
 
+#include "Object.hpp"
 #include "Material.hpp"
 
 using namespace std;
@@ -22,13 +23,11 @@ struct Vertices {
     }
 };
 
-class Pyramid {
+class Pyramid: public Object {
     private:
         Vertices vertices;
         std::map<int, vec3> edgeColor;
         std::map<int, std::vector<vec3> > edgeCoord;
-
-        Material* material;
 
         bool triangleIntersection(vec3 origin, vec3 dir, vec3 vert1, vec3 vert2, vec3 vert3, float* distance);
 
@@ -37,9 +36,6 @@ class Pyramid {
 
         bool intersection(vec3 origin, vec3 dir, float* distance, vec3* color, vec3* normal);
 
-        void setMaterial(Material* material);
-
-        Material* getMaterial();
         vec3 getNormal(int edgeIdx);
 };
 
