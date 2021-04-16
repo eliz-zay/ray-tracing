@@ -25,6 +25,8 @@ class Checkerboard: public Object {
         );
 
         bool intersection(vec3 orig, vec3 dir, float* distance, vec3* color, vec3* normal);
+
+        vec3 getNormal();
 };
 
 #endif

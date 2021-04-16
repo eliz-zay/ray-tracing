@@ -60,12 +60,8 @@ int main() {
     Material* rubber = new Material("rubber", vec4(0.9,  0.1, 0.0, 0.0), 50., 1.);
     Material* plastic = new Material("plastic", vec4(0.5, 0.4, 0.0, 0.0), 50., 1.);
 
-    Light* light1 = new Light(vec3(0, 0, -12), 3.f);
-    Light* light2 = new Light(vec3(0, 6, -9), 3.f);
-    Light* light3 = new Light(vec3(3, 2, -16), 3.f);
-
     Pyramid* pyramid1 = new Pyramid(
-        vec3(0, 3, -12),            // vertices
+        vec3(0, 3, -12),      // vertices
         vec3(-2, -1, -10),
         vec3(-2, -1, -14),
         vec3(2, -1, -14),
@@ -74,42 +70,49 @@ int main() {
     );
 
     Pyramid* pyramid2 = new Pyramid(
-        vec3(1, 2, -20),            // vertices
+        vec3(1, 2, -20),
         vec3(-1, 0, -18),
         vec3(-1, -1, -22),
         vec3(5, -1, -22),
         vec3(5, 0, -18),
-        vec3(0.3, 0.1, 0.1)        // color
+        vec3(0.3, 0.1, 0.1)
     );
 
     Checkerboard* board = new Checkerboard(
-        std::make_pair(vec3(1, 1, 1), vec3(1, .7, .3)), //colors
-        -2, // y
-        10, // x bounds
-        -40,    //z1
-        -10    //z2
+        std::make_pair(vec3(1, 1, 1), vec3(1, .7, .3)), // colors
+        -2,     // y
+        10,     // x bounds
+        -40,    // z1
+        -5      // z2
     );
 
-    Plane* plane = new Plane(
-        10,
-        10,
-        vec3(7, 0, -20),
-        vec3(1, 0, 0),
-        vec3(0.3, 0.1, 0.1)
-    );
+    vec3 floor0 = vec3(-6, -2, -8), floor1 = vec3(-6, -2, -24), floor2 = vec3(6, -2, -24), floor3 = vec3(6, -2, -8);
+    vec3 ceil0 = vec3(-6, 5, -8), ceil1 = vec3(-6, 5, -24), ceil2 = vec3(6, 5, -24), ceil3 = vec3(6, 5, -8);
+
+    Plane* wall1 = new Plane(floor0, ceil0, ceil1, floor1, vec3(0.1, 0.2, 0.3));
+    Plane* wall2 = new Plane(floor1, ceil1, ceil2, floor2, vec3(0.1, 0.2, 0.3));
+    Plane* wall3 = new Plane(floor2, ceil2, ceil3, floor3, vec3(0.1, 0.2, 0.3));
 
     pyramid1->setMaterial(glass);
     pyramid2->setMaterial(rubber);
     board->setMaterial(plastic);
-    plane->setMaterial(rubber);
+    wall1->setMaterial(rubber);
+    wall2->setMaterial(rubber);
+    wall3->setMaterial(rubber);
 
-    // Scene::addObject(pyramid1);
-    // Scene::addObject(pyramid2);
-    Scene::addLight(light1);
+    Light* innerLight = new Light(vec3(0, 0, -12), 3.f);
+    Light* light2 = new Light(vec3(0, 6, -9), 2.f);
+    Light* light3 = new Light(vec3(0, 4, -10), 1.5);
+
+    Scene::addObject(pyramid1);
+    Scene::addObject(pyramid2);
+    // Scene::addLight(innerLight); 
     Scene::addLight(light2);
     Scene::addLight(light3);
     Scene::addObject(board);
-    Scene::addObject(plane); 
+    Scene::addObject(wall1);
+    Scene::addObject(wall2);
+    Scene::addObject(wall3);
 
     render(width, height, fov);
 

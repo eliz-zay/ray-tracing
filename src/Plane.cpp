@@ -4,6 +4,8 @@
 
 #include "Plane.hpp"
 
+#include "RayHelper.cpp"
+
 using namespace std;
 
 Plane::Plane(float width, float height, vec3 point, vec3 normal, vec3 color) {
@@ -14,61 +16,33 @@ Plane::Plane(float width, float height, vec3 point, vec3 normal, vec3 color) {
     this->color = color;
 }
 
+Plane::Plane(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3, vec3 color) {
+    this->vertices.push_back(vert0);
+    this->vertices.push_back(vert1);
+    this->vertices.push_back(vert2);
+    this->vertices.push_back(vert3);
+
+    this->color = color;
+
+    vec3 A = this->vertices[2] - this->vertices[0];
+    vec3 B = this->vertices[1] - this->vertices[0];
+
+    this->normal = normalize(cross(A, B));
+}
+
 bool Plane::intersection(vec3 origin, vec3 dir, float* distance, vec3* color, vec3* normal) {
-    const float EPS = 1e-6;
-    vec3 diff = origin - this->point;
-    float prod1 = dot(diff, this->normal);
-    float prod2 = dot(dir, this->normal);
+    float dist1, dist2, dist;
 
-    if (fabs(prod2) < EPS) {
+    bool hit1 = RayHelper::triangleIntersection(origin, dir, this->vertices[0], this->vertices[1], this->vertices[2], &dist1);
+    bool hit2 = RayHelper::triangleIntersection(origin, dir, this->vertices[0], this->vertices[2], this->vertices[3], &dist2);
+
+    if (!hit1 && !hit2) {
         return false;
     }
 
-    float prod3 = prod1 / prod2;
+    dist = hit1 && (!hit2 || dist1 < dist2) ? dist1 : dist2;
 
-    if (fabs(prod1) < EPS) {
-        return false;
-    }
-
-    vec3 p = origin - dir * prod3;
-    float t = (p - origin).norm();
-
-    if (t < 0 || t > numeric_limits<float>::infinity()) {
-        return false;
-    }
-
-    vec3 temp_vec;
-    if (this->normal == vec3(0, 0, 1)) {
-        temp_vec = vec3(0, 1, 0);
-    } else {
-        temp_vec = vec3(0, 0, 1);
-    }
-
-    vec3 pos_diff = this->point - p;
-
-    vec3 width_basis = normalize(cross(this->normal, temp_vec));
-    vec3 height_basis = normalize(cross(width_basis, this->normal));
-
-    vec3 width_proj = dot(width_basis, pos_diff) * width_basis;
-    vec3 height_proj = dot(height_basis, pos_diff) * height_basis;
-
-    float width_proj_metric = fabs(width_proj.x()) > EPS ? width_proj.x() : fabs(width_proj.y()) > EPS ? width_proj.y() : width_proj.z();
-    float height_proj_metric = fabs(height_proj.x()) > EPS ? height_proj.x() : fabs(height_proj.y()) > EPS ? height_proj.y() : height_proj.z();
-    float width_basis_metric = fabs(width_basis.x()) > EPS ? width_basis.x() : fabs(width_basis.y()) > EPS ? width_basis.y() : width_basis.z();
-    float height_basis_metric = fabs(height_basis.x()) > EPS ? height_basis.x() : fabs(height_basis.y()) > EPS ? height_basis.y() : height_basis.z();
-
-    if (abs(width_proj_metric / width_basis_metric) > width) {
-        return false;
-    } 
-
-    if (abs(height_proj_metric / height_basis_metric) > height) {
-        return false;
-    }
-
-    
-    vec3 hit = origin - dir * prod3;
-
-    *distance = (hit - origin).norm();
+    *distance = dist;
     *color = this->color;
     *normal = this->normal;
 

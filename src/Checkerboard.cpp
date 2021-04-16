@@ -21,7 +21,6 @@ Checkerboard::Checkerboard(
 
 bool Checkerboard::intersection(vec3 orig, vec3 dir, float* distance, vec3* color, vec3* normal) {
     if (fabs(dir.y()) < 1e-3)  { // only for horizontal board
-        *distance = -1;
         return false;
     }
 
@@ -35,10 +34,14 @@ bool Checkerboard::intersection(vec3 orig, vec3 dir, float* distance, vec3* colo
     ) {
         *distance = hitDistance;
         *color = (int(hit.x() + 1000) + int(hit.z())) & 1 ? this->color.first : this->color.second;
-        *normal = vec3(0, 1, 0); // only for horizontal board
+        *normal = this->getNormal();
     } else {
         return false;
     }
 
     return true;
+}
+
+vec3 Checkerboard::getNormal() {
+    return vec3(0, 1, 0);
 }

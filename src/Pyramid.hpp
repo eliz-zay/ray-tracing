@@ -15,7 +15,7 @@ using namespace std;
 
 struct Vertices {
     vec3 upper;
-    std::vector<vec3> base;
+    vector<vec3> base;
 
     Vertices(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3, vec3 vert4) {
         this->upper = vert0;
@@ -26,10 +26,8 @@ struct Vertices {
 class Pyramid: public Object {
     private:
         Vertices vertices;
-        std::map<int, vec3> edgeColor;
-        std::map<int, std::vector<vec3> > edgeCoord;
-
-        bool triangleIntersection(vec3 origin, vec3 dir, vec3 vert1, vec3 vert2, vec3 vert3, float* distance);
+        map<int, vec3> edgeColor;
+        map<int, vector<vec3> > edgeCoord;
 
     public:
         Pyramid(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3, vec3 vert4, vec3 color);

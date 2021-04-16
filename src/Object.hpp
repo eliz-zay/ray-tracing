@@ -16,7 +16,6 @@ class Object {
         void setMaterial(Material* material);
 
         Material* getMaterial();
-        // virtual vec3 getNormal() = 0;
 };
 
 #endif

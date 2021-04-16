@@ -7,6 +7,7 @@
 
 #include "Scene.cpp"
 #include "Material.cpp"
+#include "RayHelper.cpp"
 
 Pyramid::Pyramid(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3, vec3 vert4, vec3 color): 
 vertices(vert0, vert1, vert2, vert3, vert4) {
@@ -26,34 +27,27 @@ bool Pyramid::intersection(vec3 orig, vec3 dir, float* distance, vec3* color, ve
     const int edgeNum = 6;
     float edgeDistance[edgeNum];
 
+    float dist = numeric_limits<float>::max();
+    bool hitPyro = false;
+    int hitEdgeIdx;
+
     for (int i = 0; i < edgeNum; i++) {
-        std::vector<vec3> coords = this->edgeCoord[i];
+        vector<vec3> coords = this->edgeCoord[i];
         float iDist;
-        if (this->triangleIntersection(orig, dir, coords[0], coords[1], coords[2], &iDist)) {
-            edgeDistance[i] = iDist;
-        } else {
-            edgeDistance[i] = -1;
+        if (RayHelper::triangleIntersection(orig, dir, coords[0], coords[1], coords[2], &iDist) && iDist < dist) {
+            hitPyro = true;
+            dist = iDist;
+            hitEdgeIdx = i;
         }
     }
 
-    float nonZeroMin = std::numeric_limits<float>::max();
-    int edgeIdx = -1;
-    for (int i = 0; i < edgeNum; i++) {
-        if (edgeDistance[i] > 0) {
-            if (edgeDistance[i] < nonZeroMin) {
-                nonZeroMin = edgeDistance[i];
-                edgeIdx = i;
-            }
-        }
-    }
-
-    if (edgeIdx == -1) {
+    if (!hitPyro) {
         return false;   
     }
 
-    vec3 hit = orig + dir * nonZeroMin;
+    vec3 hit = orig + dir * dist;
 
-    if (hit == vertices.upper) {
+    if (hit == vertices.upper) { // avoid undefined reflections
         return false;
     }
     for (vec3 vertice: vertices.base) {
@@ -62,43 +56,15 @@ bool Pyramid::intersection(vec3 orig, vec3 dir, float* distance, vec3* color, ve
         }
     }
 
-    *distance = nonZeroMin;
-    *color = this->edgeColor[edgeIdx];
-    *normal = this->getNormal(edgeIdx);
+    *distance = dist;
+    *color = this->edgeColor[hitEdgeIdx];
+    *normal = this->getNormal(hitEdgeIdx);
 
-    return true;
-}
-
-bool Pyramid::triangleIntersection(vec3 orig, vec3 dir, vec3 vert1, vec3 vert2, vec3 vert3, float* distance) {
-    vec3 e1 = vert2 - vert1;
-    vec3 e2 = vert3 - vert1;
-
-    vec3 pvec = cross(dir, e2);
-    float det = dot(e1, pvec);
-
-    if (det < 1e-8 && det > -1e-8) {
-        return false;
-    }
-
-    float inv_det = 1 / det;
-    vec3 tvec = orig - vert1;
-    float u = dot(tvec, pvec) * inv_det;
-    if (u < 0 || u > 1) {
-        return false;
-    }
-
-    vec3 qvec = cross(tvec, e1);
-    float v = dot(dir, qvec) * inv_det;
-    if (v < 0 || u + v > 1) {
-        return false;
-    }
-
-    *distance = dot(e2, qvec) * inv_det;
     return true;
 }
 
 vec3 Pyramid::getNormal(int edgeIdx) {
-    std::vector<vec3> vertices = this->edgeCoord[edgeIdx];
+    vector<vec3> vertices = this->edgeCoord[edgeIdx];
 
     vec3 A = vertices[2] - vertices[0];
     vec3 B = vertices[1] - vertices[0];

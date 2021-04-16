@@ -52,11 +52,10 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
         vec3 tmpColor;
         if (
             Scene::intersect(&shadowOrig, &lightDir, &shadowHit, &shadowNorm, &tmpColor, &tmpMaterial) && 
-            (shadowHit - shadowOrig).norm() < lightDistance
+            (shadowHit - shadowOrig).norm() < lightDistance &&
+            tmpMaterial->getAlbedo()[3] < EPS
         ) {
-            if (tmpMaterial->getAlbedo()[3] < EPS) {
                 continue;
-            }
         }
 
         diffuseLightIntensity += light->getIntensity() * std::max(0.f, dot(lightDir, normal));
@@ -71,7 +70,7 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
 }
 
 bool Scene::intersect(vec3* origin, vec3* dir, vec3* hit, vec3* normal, vec3* color, Material** material) {
-    float hitDist = std::numeric_limits<float>::max();
+    float hitDist = numeric_limits<float>::max();
     bool hitScene = false;
     vec3 hitColor, hitNormal;
 
