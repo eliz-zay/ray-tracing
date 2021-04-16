@@ -6,7 +6,6 @@
 #include "Pyramid.hpp"
 
 #include "Scene.cpp"
-#include "Material.cpp"
 #include "RayHelper.cpp"
 
 Pyramid::Pyramid(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3, vec3 vert4, vec3 color): 
@@ -25,7 +24,6 @@ vertices(vert0, vert1, vert2, vert3, vert4) {
 
 bool Pyramid::intersection(vec3 orig, vec3 dir, float* distance, vec3* color, vec3* normal) {
     const int edgeNum = 6;
-    float edgeDistance[edgeNum];
 
     float dist = numeric_limits<float>::max();
     bool hitPyro = false;

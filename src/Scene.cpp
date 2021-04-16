@@ -27,6 +27,10 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
         return Scene::backColor;
     }
 
+    if (!material->isReflective()) {
+        return color;
+    }
+
     vec4 albedo = material->getAlbedo();
 
     vec3 reflectDir = normalize(RayHelper::reflect(dir, normal));

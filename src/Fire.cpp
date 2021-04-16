@@ -9,14 +9,16 @@
 #include "vec/vec3.cpp"
 #include "vec/vec4.cpp"
 
-const float sphere_radius   = 1.5; // all the explosion fits in a sphere with this radius. The center lies in the origin.
+#include "Fire.hpp"
+
+const float sphere_radius   = 1.2; // all the explosion fits in a sphere with this radius. The center lies in the origin.
 const float noise_amplitude = 1.0; // amount of noise applied to the sphere (towards the center)
 
 template <typename T> inline T lerp(const T &v0, const T &v1, float t) {
     return v0 + (v1-v0)*std::max(0.f, std::min(1.f, t));
 }
 
-float hash(const float n) {
+float myHash(const float n) {
     float x = sin(n)*43758.5453f;
     return x-floor(x);
 }
@@ -27,11 +29,11 @@ float noise(const vec3 &v) {
     f = f*(f*(vec3(3.f, 3.f, 3.f)-f*2.f));
     float n = dot(p,vec3(1.f, 57.f, 113.f));
     return lerp(lerp(
-                     lerp(hash(n +  0.f), hash(n +  1.f), f.x()),
-                     lerp(hash(n + 57.f), hash(n + 58.f), f.x()), f.y()),
+                     lerp(myHash(n +  0.f), myHash(n +  1.f), f.x()),
+                     lerp(myHash(n + 57.f), myHash(n + 58.f), f.x()), f.y()),
                 lerp(
-                    lerp(hash(n + 113.f), hash(n + 114.f), f.x()),
-                    lerp(hash(n + 170.f), hash(n + 171.f), f.x()), f.y()), f.z());
+                    lerp(myHash(n + 113.f), myHash(n + 114.f), f.x()),
+                    lerp(myHash(n + 170.f), myHash(n + 171.f), f.x()), f.y()), f.z());
 }
 
 vec3 rotate(const vec3 &v) {
@@ -70,20 +72,8 @@ float signed_distance(const vec3 &p) { // this function defines the implicit sur
     return p.norm() - (sphere_radius + displacement);
 }
 
-bool sphere_trace(const vec3 &orig, const vec3 &dir, vec3 &pos) {         // Notice the early discard; in fact I know that the noise() function produces non-negative values,
-    if (dot(orig,orig) - pow(dot(orig,dir), 2) > pow(sphere_radius, 2)) return false;  // thus all the explosion fits in the sphere. Thus this early discard is a conservative check.
-                                                                             // It is not necessary, just a small speed-up
-    pos = orig;
-    for (size_t i=0; i<128; i++) {
-        float d = signed_distance(pos);
-        if (d < 0) return true;
-        pos = pos + dir*std::max(d*0.1f, .01f); // note that the step depends on the current distance, if we are far from the surface, we can do big steps
-    }
-    return false;
-}
-
 vec3 distance_field_normal(const vec3 &pos) { // simple finite differences, very sensitive to the choice of the eps constant
-    const float eps = 0.1;
+    const float eps = 0.01;
     float d = signed_distance(pos);
     float nx = signed_distance(pos + vec3(eps, 0, 0)) - d;
     float ny = signed_distance(pos + vec3(0, eps, 0)) - d;
@@ -91,38 +81,41 @@ vec3 distance_field_normal(const vec3 &pos) { // simple finite differences, very
     return normalize(vec3(nx, ny, nz));
 }
 
-int main() {
-    const int   width    = 640;     // image width
-    const int   height   = 480;     // image height
-    const float fov      = M_PI/3.; // field of view angle
-    std::vector<vec3> framebuffer(width*height);
+bool sphere_trace(const vec3 &orig, const vec3 &dir, vec3 &pos) {         // Notice the early discard; in fact I know that the noise() function produces non-negative values,
+    if (dot(orig,orig) - pow(dot(orig,dir), 2) > pow(sphere_radius, 2)) return false;  // thus all the explosion fits in the sphere. Thus this early discard is a conservative check.
+                                                                             // It is not necessary, just a small speed-up
 
-    #pragma omp parallel for
-    for (size_t j = 0; j<height; j++) { // actual rendering loop
-        for (size_t i = 0; i<width; i++) {
-            float dir_x =  (i + 0.5) -  width/2.;
-            float dir_y = -(j + 0.5) + height/2.;    // this flips the image at the same time
-            float dir_z = -height/(2.*tan(fov/2.));
-            vec3 hit;
-            if (sphere_trace(vec3(0, 0, 3), normalize(vec3(dir_x, dir_y, dir_z)), hit)) { // the camera is placed to (0,0,3) and it looks along the -z axis
-                float noise_level = (sphere_radius-hit.norm())/noise_amplitude;
-                vec3 light_dir = normalize((vec3(10, 10, 10) - hit));                     // one light is placed to (10,10,10)
-                float light_intensity  = std::max(0.4f, dot(light_dir,distance_field_normal(hit)));
-                framebuffer[i+j*width] = palette_fire((-.2 + noise_level)*2)*light_intensity;
-            } else {
-                framebuffer[i+j*width] = vec3(0.2, 0.7, 0.8); // background color
-            }
+    pos = orig - vec3(0, 1, -12);
+
+    for (size_t i=0; i<128; i++) {
+        float d = signed_distance(pos);
+        if (d < 0) {
+            return true;
         }
+        pos = pos + dir*std::max(d*0.1f, .01f); // note that the step depends on the current distance, if we are far from the surface, we can do big steps
     }
 
-    std::ofstream ofs("./out.ppm", std::ios::binary); // save the framebuffer to file
-    ofs << "P6\n" << width << " " << height << "\n255\n";
-    for (size_t i = 0; i < height*width; ++i) {
-        for (size_t j = 0; j<3; j++) {
-            ofs << (char)(std::max(0, std::min(255, static_cast<int>(255*framebuffer[i][j]))));
-        }
-    }
-    ofs.close();
+    return false;
+}
 
-    return 0;
+Fire::Fire(vec3 center, float radius) {
+    this->center = center;
+    this->radius = radius;
+}
+
+bool Fire::intersection(vec3 origin, vec3 dir, float* distance, vec3* color, vec3* normal) {
+    vec3 hit;
+    if (!sphere_trace(origin, dir, hit)) {
+        return false;
+    }
+
+    float noise_level = (sphere_radius-hit.norm())/noise_amplitude;
+    vec3 light_dir = normalize((vec3(10, 10, 10) - hit));                     // one light is placed to (10,10,10)
+    float light_intensity  = std::max(0.4f, dot(light_dir,distance_field_normal(hit)));
+
+    *distance = (origin - hit).norm();
+    *normal = normalize(hit - this->center);
+    *color = palette_fire((-.2 + noise_level)*2) * light_intensity;
+
+    return true;
 }

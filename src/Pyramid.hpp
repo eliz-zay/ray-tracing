@@ -9,7 +9,6 @@
 #include "vec/vec4.cpp"
 
 #include "Object.hpp"
-#include "Material.hpp"
 
 using namespace std;
 

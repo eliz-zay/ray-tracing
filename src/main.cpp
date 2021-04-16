@@ -12,10 +12,12 @@
 
 #include "Scene.cpp"
 
-#include "Pyramid.cpp"
 #include "Light.cpp"
+#include "Pyramid.cpp"
 #include "Checkerboard.cpp"
 #include "Plane.cpp"
+#include "Stand.cpp"
+#include "Fire.cpp"
 
 using namespace std;
 
@@ -69,6 +71,15 @@ int main() {
         vec3(1, 1, 1)        // color
     );
 
+    // Pyramid* pyramid2 = new Pyramid(
+    //     vec3(0, 1, -12),      // vertices
+    //     vec3(-1.5, 0, -10.5),
+    //     vec3(-1.5, 0, -13.5),
+    //     vec3(1, 0, -13.5),
+    //     vec3(1, 0, -10.5),
+    //     vec3(0.3, 0.1, 0.1)        // color
+    // );
+
     Pyramid* pyramid2 = new Pyramid(
         vec3(1, 2, -20),
         vec3(-1, 0, -18),
@@ -80,11 +91,25 @@ int main() {
 
     Checkerboard* board = new Checkerboard(
         std::make_pair(vec3(1, 1, 1), vec3(1, .7, .3)), // colors
-        -2,     // y
+        -1.5,     // y
         10,     // x bounds
         -40,    // z1
         -5      // z2
     );
+
+    Stand* stand = new Stand(
+        vec3(-3, -1.4, -9),
+        vec3(-3, -1.4, -15),
+        vec3(3, -1.4, -15),
+        vec3(3, -1.4, -9),
+        vec3(-3, -1.1, -9),
+        vec3(-3, -1.1, -15),
+        vec3(3, -1.1, -15),
+        vec3(3, -1.1, -9),
+        vec3(0.2, 0., 0.3)
+    );
+
+    Fire* fire = new Fire(vec3(0, 3, -12), 2);
 
     vec3 floor0 = vec3(-6, -2, -8), floor1 = vec3(-6, -2, -24), floor2 = vec3(6, -2, -24), floor3 = vec3(6, -2, -8);
     vec3 ceil0 = vec3(-6, 5, -8), ceil1 = vec3(-6, 5, -24), ceil2 = vec3(6, 5, -24), ceil3 = vec3(6, 5, -8);
@@ -99,20 +124,25 @@ int main() {
     wall1->setMaterial(rubber);
     wall2->setMaterial(rubber);
     wall3->setMaterial(rubber);
+    stand->setMaterial(plastic);
+    fire->setMaterial(new Material());
 
     Light* innerLight = new Light(vec3(0, 0, -12), 3.f);
-    Light* light2 = new Light(vec3(0, 6, -9), 2.f);
+    Light* light2 = new Light(vec3(0, 3, -4), 4.f);
     Light* light3 = new Light(vec3(0, 4, -10), 1.5);
 
-    Scene::addObject(pyramid1);
-    Scene::addObject(pyramid2);
     // Scene::addLight(innerLight); 
     Scene::addLight(light2);
-    Scene::addLight(light3);
+    // Scene::addLight(light3);
+
+    Scene::addObject(pyramid1);
+    // Scene::addObject(pyramid2);
     Scene::addObject(board);
     Scene::addObject(wall1);
     Scene::addObject(wall2);
     Scene::addObject(wall3);
+    Scene::addObject(stand);
+    Scene::addObject(fire);
 
     render(width, height, fov);
 
