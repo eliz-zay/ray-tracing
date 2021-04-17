@@ -29,7 +29,7 @@ bool Fire::intersection(vec3 origin, vec3 dir, float* distance, vec3* color, vec
     // Move back to our coordinates
     hit = hit + this->center;
     *distance = (origin - hit).norm();
-    // *normal = normalize(hit - this->center);
+    *normal = normalize(hit - this->center);
 
     return true;
 }
@@ -38,12 +38,12 @@ bool Fire::intersection(vec3 origin, vec3 dir, float* distance, vec3* color, vec
 bool Fire::sphereTrace(const vec3 &orig, const vec3 &dir, vec3 &hit) {
     hit = orig; // move on from current pos
 
-    for (size_t i = 0; i < 1200; i++) {
+    for (size_t i = 0; i < 120; i++) {
         float d = signedDistance(hit);
         if (d < 0) {
             return true;
         }
-        hit += dir * max(d*0.1f, .01f);
+        hit += dir * max(d*0.1f, .1f);
     }
 
     return false;

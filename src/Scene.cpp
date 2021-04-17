@@ -17,7 +17,7 @@ vec3 Scene::backColor = vec3(0.556, 0.914, 1.0);
 vector<Object*> Scene::objects = {};
 vector<Light*> Scene::lights = {};
 
-vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
+vec3 Scene::castRay(vec3 origin, vec3 dir, bool* hitGlass, int depth = 0) {
     vec3 color, normal, hit;
     Material* material;
 
@@ -31,6 +31,10 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
         return color;
     }
 
+    if (depth == 0) {
+        *hitGlass = material->getName() == "glass" ? true : false;
+    }
+
     vec4 albedo = material->getAlbedo();
 
     vec3 reflectDir = normalize(RayHelper::reflect(dir, normal));
@@ -39,8 +43,8 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
     vec3 reflectOrig = dot(reflectDir, normal) < 0 ? hit - normal * EPS : hit + normal * EPS;
     vec3 refractOrig = dot(refractDir, normal) < 0 ? hit - normal * EPS : hit + normal * EPS;
 
-    vec3 reflectColor = Scene::castRay(reflectOrig, reflectDir, depth + 1);
-    vec3 refractColor = Scene::castRay(refractOrig, refractDir, depth + 1);
+    vec3 reflectColor = Scene::castRay(reflectOrig, reflectDir, nullptr, depth + 1);
+    vec3 refractColor = Scene::castRay(refractOrig, refractDir, nullptr, depth + 1);
 
     float reflectWeight = RayHelper::SchlickApproximation(dir, normal, material->getRefractIdx());
 
@@ -66,7 +70,7 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, int depth = 0) {
         specularLightIntensity += light->getIntensity() * powf(std::max(0.f, dot(-RayHelper::reflect(-lightDir, normal), dir)), material->getSpecularExp());
     }
 
-    return 
+    return
         color * diffuseLightIntensity * albedo[0] + 
         vec3(1, 1, 1) * specularLightIntensity * albedo[1] +
         reflectColor * albedo[2] * reflectWeight +

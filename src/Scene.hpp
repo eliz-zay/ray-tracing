@@ -30,7 +30,7 @@ class Scene {
         Scene();
 
     public:
-        static vec3 castRay(vec3 origin, vec3 dir, int depth);
+        static vec3 castRay(vec3 origin, vec3 dir, bool* hitGlass, int depth);
         static bool intersect(vec3* origin, vec3* dir, vec3* hit, vec3* normal, vec3* color, Material** material);
 
         static void addObject(Object* obj);

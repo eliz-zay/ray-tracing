@@ -38,21 +38,38 @@ void toFile(int width, int height, vector<vec3> framebuffer) {
 }
 
 void render(int width, int height, int fov) {
-    const float eps = 1e-1;
-    int samplesPerPix = 1;
+    const float eps = 4e-1;
+    const int samplesPerPixel = 1;
     vector<vec3> framebuffer(width * height);
 
     #pragma omp parallel for
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            vec3 sampleColor;
-            for (int sample = 0; sample < samplesPerPix; sample++) {
+            float x =  (2 * (j + 0.5) / (float)width - 1) * tan(fov / 2.) * width / ((float)height);
+            float y = -(2 * (i + 0.5) / (float)height - 1) * tan(fov / 2.);
+            vec3 dir = normalize(vec3(x, y, -1));
+            bool hitGlass;
+            vec3 directColor = Scene::castRay(vec3(0, 0, 0), dir, &hitGlass);
+
+            if (!hitGlass) {
+                framebuffer[i * width + j] = directColor;
+                continue;
+            }
+
+            vec3 sumColor;
+            int sampleCount = 0;
+            for (int sample = 0; sample < samplesPerPixel; sample++) {
                 float x =  ((2 * (j + 0.5) + eps * sample) / (float)width - 1) * tan(fov / 2.) * width / ((float)height);
                 float y = -((2 * (i + 0.5) + eps * sample) / (float)height - 1) * tan(fov / 2.);
                 vec3 dir = normalize(vec3(x, y, -1));
-                sampleColor += Scene::castRay(vec3(0, 0, 0), dir);
+                vec3 sampleColor = Scene::castRay(vec3(0, 0, 0), dir, &hitGlass);
+                if (!hitGlass) { // if we moved and missed the glass
+                    continue;
+                }
+                sampleCount++;
+                sumColor += sampleColor;
             }
-            framebuffer[i * width + j] = sampleColor / samplesPerPix;
+            framebuffer[i * width + j] = sumColor / sampleCount;
         }
     }
 
@@ -60,7 +77,7 @@ void render(int width, int height, int fov) {
 }
 
 int main() {
-    const int width = 258;
+    const int width = 192;
     const int height = 192;
     const int fov = M_PI / 2.;
 
@@ -74,17 +91,8 @@ int main() {
         vec3(-2, -1, -14),
         vec3(2, -1, -14),
         vec3(2, -1, -10),
-        vec3(1, 1, 1)        // color
+        vec3(0, 0, 0.2)        // color
     );
-
-    // Pyramid* pyramid2 = new Pyramid(
-    //     vec3(0, 1, -12),      // vertices
-    //     vec3(-1.5, 0, -10.5),
-    //     vec3(-1.5, 0, -13.5),
-    //     vec3(1, 0, -13.5),
-    //     vec3(1, 0, -10.5),
-    //     vec3(0.3, 0.1, 0.1)        // color
-    // );
 
     Pyramid* pyramid2 = new Pyramid(
         vec3(1, 2, -20),
@@ -115,10 +123,10 @@ int main() {
         vec3(0.2, 0., 0.3)
     );
 
-    Fire* fire = new Fire(vec3(0, 1, -12), 1);
+    Fire* fire = new Fire(vec3(0, 0.3, -12), 1);
 
-    vec3 floor0 = vec3(-6, -2, -8), floor1 = vec3(-6, -2, -10), floor2 = vec3(6, -2, -10), floor3 = vec3(6, -2, -8);
-    vec3 ceil0 = vec3(-6, 5, -8), ceil1 = vec3(-6, 5, -10), ceil2 = vec3(6, 5, -10), ceil3 = vec3(6, 5, -8);
+    vec3 floor0 = vec3(-6, -2, -8), floor1 = vec3(-6, -2, -24), floor2 = vec3(6, -2, -24), floor3 = vec3(6, -2, -8);
+    vec3 ceil0 = vec3(-6, 5, -8), ceil1 = vec3(-6, 5, -24), ceil2 = vec3(6, 5, -24), ceil3 = vec3(6, 5, -8);
 
     Plane* wall1 = new Plane(floor0, ceil0, ceil1, floor1, vec3(0.1, 0.2, 0.3));
     Plane* wall2 = new Plane(floor1, ceil1, ceil2, floor2, vec3(0.1, 0.2, 0.3));
@@ -137,17 +145,17 @@ int main() {
     Light* light2 = new Light(vec3(0, 3, -4), 4.f);
     Light* light3 = new Light(vec3(0, 4, -10), 1.5);
 
-    // Scene::addLight(innerLight); 
+    Scene::addLight(innerLight); 
     Scene::addLight(light2);
     // Scene::addLight(light3);
 
     Scene::addObject(pyramid1);
     // Scene::addObject(pyramid2);
     Scene::addObject(board);
-    // Scene::addObject(wall1);
-    // Scene::addObject(wall2);
-    // Scene::addObject(wall3);
-    // Scene::addObject(stand);
+    Scene::addObject(wall1);
+    Scene::addObject(wall2);
+    Scene::addObject(wall3);
+    Scene::addObject(stand);
     Scene::addObject(fire);
 
     render(width, height, fov);
