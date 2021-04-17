@@ -38,15 +38,21 @@ void toFile(int width, int height, vector<vec3> framebuffer) {
 }
 
 void render(int width, int height, int fov) {
+    const float eps = 1e-1;
+    int samplesPerPix = 1;
     vector<vec3> framebuffer(width * height);
 
     #pragma omp parallel for
-    for (size_t i = 0; i < height; i++) {
-        for (size_t j = 0; j < width; j++) {
-            float x =  (2 * (j + 0.5) / (float)width  - 1) * tan(fov / 2.) * width / (float)height;
-            float y = -(2 * (i + 0.5) / (float)height - 1) * tan(fov / 2.);
-            vec3 dir = normalize(vec3(x, y, -1));
-            framebuffer[i * width + j] = Scene::castRay(vec3(0, 0, 0), dir);
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            vec3 sampleColor;
+            for (int sample = 0; sample < samplesPerPix; sample++) {
+                float x =  ((2 * (j + 0.5) + eps * sample) / (float)width - 1) * tan(fov / 2.) * width / ((float)height);
+                float y = -((2 * (i + 0.5) + eps * sample) / (float)height - 1) * tan(fov / 2.);
+                vec3 dir = normalize(vec3(x, y, -1));
+                sampleColor += Scene::castRay(vec3(0, 0, 0), dir);
+            }
+            framebuffer[i * width + j] = sampleColor / samplesPerPix;
         }
     }
 
@@ -54,8 +60,8 @@ void render(int width, int height, int fov) {
 }
 
 int main() {
-    const int width = 1024;
-    const int height = 768;
+    const int width = 258;
+    const int height = 192;
     const int fov = M_PI / 2.;
 
     Material* glass = new Material("glass", vec4(0.0, 0.5, 0.1, 0.8), 125., 1.5);
@@ -90,8 +96,8 @@ int main() {
     );
 
     Checkerboard* board = new Checkerboard(
-        std::make_pair(vec3(1, 1, 1), vec3(1, .7, .3)), // colors
-        -1.5,     // y
+        std::make_pair(vec3(1, 1, 1), vec3(1, .1, .3)), // colors
+        -1.5,   // y
         10,     // x bounds
         -40,    // z1
         -5      // z2
@@ -109,10 +115,10 @@ int main() {
         vec3(0.2, 0., 0.3)
     );
 
-    Fire* fire = new Fire(vec3(0, 3, -12), 2);
+    Fire* fire = new Fire(vec3(0, 1, -12), 1);
 
-    vec3 floor0 = vec3(-6, -2, -8), floor1 = vec3(-6, -2, -24), floor2 = vec3(6, -2, -24), floor3 = vec3(6, -2, -8);
-    vec3 ceil0 = vec3(-6, 5, -8), ceil1 = vec3(-6, 5, -24), ceil2 = vec3(6, 5, -24), ceil3 = vec3(6, 5, -8);
+    vec3 floor0 = vec3(-6, -2, -8), floor1 = vec3(-6, -2, -10), floor2 = vec3(6, -2, -10), floor3 = vec3(6, -2, -8);
+    vec3 ceil0 = vec3(-6, 5, -8), ceil1 = vec3(-6, 5, -10), ceil2 = vec3(6, 5, -10), ceil3 = vec3(6, 5, -8);
 
     Plane* wall1 = new Plane(floor0, ceil0, ceil1, floor1, vec3(0.1, 0.2, 0.3));
     Plane* wall2 = new Plane(floor1, ceil1, ceil2, floor2, vec3(0.1, 0.2, 0.3));
@@ -138,10 +144,10 @@ int main() {
     Scene::addObject(pyramid1);
     // Scene::addObject(pyramid2);
     Scene::addObject(board);
-    Scene::addObject(wall1);
-    Scene::addObject(wall2);
-    Scene::addObject(wall3);
-    Scene::addObject(stand);
+    // Scene::addObject(wall1);
+    // Scene::addObject(wall2);
+    // Scene::addObject(wall3);
+    // Scene::addObject(stand);
     Scene::addObject(fire);
 
     render(width, height, fov);
