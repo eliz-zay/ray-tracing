@@ -9,6 +9,7 @@
 #include "Plane.cpp"
 #include "Material.cpp"
 #include "RayHelper.cpp"
+#include "LightSphere.cpp"
 
 #define EPS 1e-4
 
@@ -24,14 +25,10 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, bool* hitGlass, int depth = 0) {
     Material* material;
     Object* object;
 
-    bool isIntersect = Scene::intersect(&origin, &dir, &hit, &normal, &color, &material, &object);
+    bool isIntersect = Scene::intersect(&origin, &dir, &hit, &normal, &color, &material, &object, depth);
 
-    if (!isIntersect || depth > 6) {
+    if (!isIntersect || depth > 4) {
         return Scene::backColor;
-    }
-
-    if (!material->isReflective()) {
-        return color;
     }
 
     if (depth == 0) {
@@ -43,20 +40,33 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, bool* hitGlass, int depth = 0) {
         }
     }
 
+    if (!material->isReflective()) {
+        return color;
+    }
+
     vec4 albedo = material->getAlbedo();
 
-    vec3 reflectDir = normalize(RayHelper::reflect(dir, normal));
-    vec3 refractDir = normalize(RayHelper::refract(dir, normal, material->getRefractIdx()));
+    vec3 reflectColor, refractColor;
+    float reflectWeight = 0.f;
 
-    vec3 reflectOrig = dot(reflectDir, normal) < 0 ? hit - normal * EPS : hit + normal * EPS;
-    vec3 refractOrig = dot(refractDir, normal) < 0 ? hit - normal * EPS : hit + normal * EPS;
+    if (albedo[2] < EPS) {
+        reflectColor = vec3(0, 0, 0);
+    } else {
+        vec3 reflectDir = normalize(RayHelper::reflect(dir, normal));
+        vec3 reflectOrig = dot(reflectDir, normal) < 0 ? hit - normal * EPS : hit + normal * EPS;
+        reflectColor = Scene::castRay(reflectOrig, reflectDir, nullptr, depth + 1);
 
-    vec3 reflectColor = Scene::castRay(reflectOrig, reflectDir, nullptr, depth + 1);
-    vec3 refractColor = Scene::castRay(refractOrig, refractDir, nullptr, depth + 1);
+        reflectWeight = RayHelper::SchlickApproximation(dir, normal, material->getRefractIdx());
+    }
 
-    refractColor += fogColor * fogIntensity; // fog inside the crystal
-
-    float reflectWeight = RayHelper::SchlickApproximation(dir, normal, material->getRefractIdx());
+    if (albedo[3] < EPS) {
+        refractColor = vec3(0, 0, 0);
+    } else {
+        vec3 refractDir = normalize(RayHelper::refract(dir, normal, material->getRefractIdx()));
+        vec3 refractOrig = dot(refractDir, normal) < 0 ? hit - normal * EPS : hit + normal * EPS;
+        refractColor = Scene::castRay(refractOrig, refractDir, nullptr, depth + 1);
+        refractColor += fogColor * fogIntensity; // fog inside the crystal
+    }
 
     float diffuseLightIntensity = 0, specularLightIntensity = 0;
 
@@ -69,26 +79,26 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, bool* hitGlass, int depth = 0) {
         Material* tmpMaterial;
         Object* tmpObj;
         if (
-            Scene::intersect(&shadowOrig, &lightDir, &shadowHit, &shadowNorm, &tmpColor, &tmpMaterial, &tmpObj) && 
-            (shadowHit - shadowOrig).norm() < lightDistance 
+            Scene::intersect(&shadowOrig, &lightDir, &shadowHit, &shadowNorm, &tmpColor, &tmpMaterial, &tmpObj, depth) && 
+            (shadowHit - shadowOrig).norm() < lightDistance &&
+            // Enable a light shine through its own sphere
+            !(tmpMaterial->isLight() && dynamic_cast<LightSphere*>(tmpObj)->getIdx() == light->getIdx())
         ) {
-                continue;
+            continue;
         }
 
         diffuseLightIntensity += light->getIntensity() * std::max(0.f, dot(lightDir, normal));
         specularLightIntensity += light->getIntensity() * powf(std::max(0.f, dot(-RayHelper::reflect(-lightDir, normal), dir)), material->getSpecularExp());
     }
 
-    vec3 resultColor =
+    return
         color * diffuseLightIntensity * albedo[0] + 
         vec3(1, 1, 1) * specularLightIntensity * albedo[1] +
         reflectColor * albedo[2] * reflectWeight +
         refractColor * albedo[3] * (1 - reflectWeight);
-
-    return resultColor;
 }
 
-bool Scene::intersect(vec3* origin, vec3* dir, vec3* hit, vec3* normal, vec3* color, Material** material, Object** object) {
+bool Scene::intersect(vec3* origin, vec3* dir, vec3* hit, vec3* normal, vec3* color, Material** material, Object** object, int depth) {
     float hitDist = numeric_limits<float>::max();
     bool hitScene = false;
     vec3 hitColor, hitNormal;
@@ -96,6 +106,10 @@ bool Scene::intersect(vec3* origin, vec3* dir, vec3* hit, vec3* normal, vec3* co
     Object* hitObj;
 
     for (Object* obj: Scene::objects) {
+        // Draw a light only at straight view but not after reflections/refractions
+        if (obj->getMaterial()->isLight() && depth > 0) {
+            continue;
+        }
         vec3 iColor, iNormal;
         float iDist;
         if (obj->intersection(*origin, *dir, &iDist, &iColor, &iNormal) && iDist < hitDist) {

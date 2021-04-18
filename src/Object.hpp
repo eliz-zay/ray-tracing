@@ -6,6 +6,8 @@
 
 #include "Material.hpp"
 
+using namespace std;
+
 class Object {
     protected:
         Material* material;

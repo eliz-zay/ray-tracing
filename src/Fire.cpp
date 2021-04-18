@@ -34,16 +34,19 @@ bool Fire::intersection(vec3 origin, vec3 dir, float* distance, vec3* color, vec
     return true;
 }
 
-// move on until f<0 (it means we hit the sphere)
+// Ray marching
 bool Fire::sphereTrace(const vec3 &orig, const vec3 &dir, vec3 &hit) {
+    const int marchLength = 30;
+    const float step = 0.4;
+
     hit = orig; // move on from current pos
 
-    for (size_t i = 0; i < 120; i++) {
+    for (size_t i = 0; i < marchLength; i++) {
         float d = signedDistance(hit);
         if (d < 0) {
             return true;
         }
-        hit += dir * max(d*0.1f, .1f);
+        hit += dir * max(d * step, step);
     }
 
     return false;
@@ -51,7 +54,7 @@ bool Fire::sphereTrace(const vec3 &orig, const vec3 &dir, vec3 &hit) {
 
 // Defines the implicit surface we render
 float Fire::signedDistance(const vec3 &pos) {
-    float displacement = -brownianMotion(pos * 3.4) * NOISE_AMPLITUDE;
+    float displacement = -noise(pos * 3.4) * NOISE_AMPLITUDE;
     return pos.norm() - (this->radius + displacement);
 }
 
@@ -65,13 +68,9 @@ vec3 Fire::distanceFieldNormal(const vec3 &pos) { // simple finite differences, 
     return normalize(vec3(nx, ny, nz));
 }
 
-// Noise function
-float Fire::brownianMotion(const vec3 &x) {
-    vec3 p = vec3(dot(vec3(0.00,  0.80,  0.60), x), dot(vec3(-0.80,  0.36, -0.48), x), dot(vec3(-0.60, -0.48,  0.64), x));
-    return noise(p);
-}
+float Fire::noise(const vec3 &u) {
+    vec3 v = vec3(dot(vec3(0.00,  0.80,  0.60), u), dot(vec3(-0.80,  0.36, -0.48), u), dot(vec3(-0.60, -0.48,  0.64), u));
 
-float Fire::noise(const vec3 &v) {
     vec3 p(floor(v.x()), floor(v.y()), floor(v.z()));
     vec3 f = v - p;
     f = f * (f * (vec3(3.f, 3.f, 3.f) - f * 2.f));

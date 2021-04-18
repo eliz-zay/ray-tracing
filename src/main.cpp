@@ -18,6 +18,7 @@
 #include "Plane.cpp"
 #include "Stand.cpp"
 #include "Fire.cpp"
+#include "LightSphere.cpp"
 
 using namespace std;
 
@@ -38,8 +39,9 @@ void toFile(int width, int height, vector<vec3> framebuffer) {
 }
 
 void render(int width, int height, int fov) {
-    const float eps = 4e-1;
-    const int samplesPerPixel = 1;
+    const float eps = 1.2;
+    const int fogSamples = 8;
+    const int samplesNum = 2;
     vector<vec3> framebuffer(width * height);
 
     #pragma omp parallel for
@@ -52,13 +54,22 @@ void render(int width, int height, int fov) {
             vec3 directColor = Scene::castRay(vec3(0, 2, 0), dir, &hitGlass);
 
             if (!hitGlass) {
-                framebuffer[i * width + j] = directColor;
+                vec3 sumColor = directColor;
+                int sampleCount = 1;
+                for (int sample = 1; sample < samplesNum; sample++) {
+                    float x =  ((2 * (j + 0.5) + eps * sample) / (float)width - 1) * tan(fov / 2.) * width / ((float)height);
+                    float y = -((2 * (i + 0.5) + eps * sample) / (float)height - 1) * tan(fov / 2.);
+                    vec3 dir = normalize(vec3(x, y - 0.2, -1));
+                    sumColor += Scene::castRay(vec3(0, 2, 0), dir, &hitGlass);
+                    sampleCount++;
+                }
+                framebuffer[i * width + j] = sumColor / sampleCount;
                 continue;
             }
 
             vec3 sumColor;
             int sampleCount = 0;
-            for (int sample = 0; sample < samplesPerPixel; sample++) {
+            for (int sample = 0; sample < fogSamples; sample++) {
                 float x =  ((2 * (j + 0.5) + eps * sample) / (float)width - 1) * tan(fov / 2.) * width / ((float)height);
                 float y = -((2 * (i + 0.5) + eps * sample) / (float)height - 1) * tan(fov / 2.);
                 vec3 dir = normalize(vec3(x, y - 0.2, -1));
@@ -77,16 +88,17 @@ void render(int width, int height, int fov) {
 }
 
 int main() {
-    const int width = 192;
-    const int height = 192;
+    const int width = 512;
+    const int height = 512;
     const int fov = M_PI / 2.;
 
     Material* glass = new Material("glass", vec4(0.0, 0.5, 0.1, 0.8), 125., 1.5);
-    Material* rubber = new Material("rubber", vec4(0.9,  0.1, 0.2, 0.0), 40., 1.);
-    Material* plastic = new Material("plastic", vec4(0.9, 0.4, 0.2, 0.0), 40., 1.);
-    Material* fireMaterial = new Material("fire");
+    Material* metallike = new Material("metallike", vec4(0.9, 0.1, 0., 0.0), 40., 1.);
+    Material* littleshiny = new Material("plastic", vec4(0.9, 0.4, 0.2, 0.0), 40., 1.);
+    Material* fireMaterial = new Material("fire", false, false);
+    Material* lightMaterial = new Material("light", false, true);
 
-    Pyramid* pyramid1 = new Pyramid(
+    Pyramid* pyramid = new Pyramid(
         vec3(0, 3, -12),      // vertices
         vec3(-2, -1, -10),
         vec3(-2, -1, -14),
@@ -104,23 +116,17 @@ int main() {
         vec3(0.3, 0.1, 0.1)
     );
 
-    Checkerboard* board = new Checkerboard(
-        std::make_pair(vec3(1, 1, 1), vec3(0.1, 0, 0.05)), // colors
-        -1.5,   // y
-        10,     // x bounds
-        -100,    // z1
-        -5      // z2
-    );
+    Checkerboard* board = new Checkerboard(std::make_pair(vec3(1, 1, 1), vec3(0.1, 0, 0.05)), -1.5, 10, -50, -5);
 
     Stand* stand = new Stand(
         vec3(-3, -1.4, -9),
         vec3(-3, -1.4, -15),
         vec3(3, -1.4, -15),
         vec3(3, -1.4, -9),
-        vec3(-3, -1.1, -9),
-        vec3(-3, -1.1, -15),
-        vec3(3, -1.1, -15),
-        vec3(3, -1.1, -9),
+        vec3(-3, -1.05, -9),
+        vec3(-3, -1.05, -15),
+        vec3(3, -1.05, -15),
+        vec3(3, -1.05, -9),
         vec3(0.12, 0., 0.05)
     );
 
@@ -133,31 +139,38 @@ int main() {
     Plane* wall2 = new Plane(floor1, ceil1, ceil2, floor2, vec3(0.05, 0.1, 0.15));
     Plane* wall3 = new Plane(floor2, ceil2, ceil3, floor3, vec3(0.05, 0.1, 0.15));
 
-    pyramid1->setMaterial(glass);
-    pyramid2->setMaterial(rubber);
-    board->setMaterial(rubber);
-    wall1->setMaterial(rubber);
-    wall2->setMaterial(rubber);
-    wall3->setMaterial(rubber);
-    stand->setMaterial(plastic);
+    vec3 lightPos1(-1, 0, -9);
+    vec3 lightPos2(4, 0, -20);
+
+    LightSphere* lightSphere2 = new LightSphere(lightPos1, 0.2, 0);
+    LightSphere* lightSphere3 = new LightSphere(lightPos2, 0.2, 1);
+
+    pyramid->setMaterial(glass);
+    pyramid2->setMaterial(metallike);
+    board->setMaterial(littleshiny);
+    wall1->setMaterial(metallike);
+    wall2->setMaterial(metallike);
+    wall3->setMaterial(metallike);
+    stand->setMaterial(littleshiny);
     fire->setMaterial(fireMaterial);
+    lightSphere2->setMaterial(lightMaterial);
+    lightSphere3->setMaterial(lightMaterial);
 
-    Light* innerLight = new Light(vec3(0, 0, -12), 2.f);
-    Light* light2 = new Light(vec3(-5, 4, -9), 1.8);
-    Light* light3 = new Light(vec3(4, 0, -20), 1.5);
+    Light* light2 = new Light(lightPos1, 1.3, 0);
+    Light* light3 = new Light(lightPos2, 2., 1);
 
-    Scene::addLight(innerLight);
     Scene::addLight(light2);
     Scene::addLight(light3);
 
-    Scene::addObject(pyramid1);
-    // Scene::addObject(pyramid2);
+    Scene::addObject(pyramid);
     Scene::addObject(board);
     Scene::addObject(wall1);
     Scene::addObject(wall2);
     Scene::addObject(wall3);
     Scene::addObject(stand);
     Scene::addObject(fire);
+    Scene::addObject(lightSphere2);
+    Scene::addObject(lightSphere3);
 
     render(width, height, fov);
 

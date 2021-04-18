@@ -13,11 +13,15 @@ class Light {
         vec3 origin;
         float intensity;
 
+        int idx;
+
     public:
-        Light(vec3 origin, float intensity);
+        Light(vec3 origin, float intensity, int idx);
 
         vec3 getOrigin();
         float getIntensity();
+
+        int getIdx();
 };
 
 #endif

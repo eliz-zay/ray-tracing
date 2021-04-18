@@ -13,7 +13,6 @@ class Fire: public Object {
         template <typename T> inline T lerp(const T &v0, const T &v1, float t);
         float sinHash(const float n);
         float noise(const vec3 &v);
-        float brownianMotion(const vec3 &x);
         vec3 paletteFire(const float d);
         float signedDistance(const vec3 &p);
         vec3 distanceFieldNormal(const vec3 &pos);

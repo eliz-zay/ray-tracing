@@ -11,16 +11,18 @@ class Material {
         string name;
 
         bool reflective;
+        bool light;
 
         vec4 albedo;
         float specularExp, refractiveIdx;
 
     public:
         Material(string name, vec4 albedo, float specularExp, float refractiveIdx, bool reflective);
-        Material(string name); // for non-reflective material
+        Material(string name, bool reflective, bool light); // for non-reflective material
 
         string getName();
         bool isReflective();
+        bool isLight();
         vec4 getAlbedo();
         float getSpecularExp();
         float getRefractIdx();

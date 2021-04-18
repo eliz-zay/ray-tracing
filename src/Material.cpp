@@ -5,14 +5,16 @@
 Material::Material(string name, vec4 albedo, float specularExponent, float refractiveIdx, bool reflective = true) {
     this->name = name;
     this->reflective = reflective;
+    this->light = false;
     this->albedo = albedo;
     this->specularExp = specularExponent;
     this->refractiveIdx = refractiveIdx;
 }
 
-Material::Material(string name) {
+Material::Material(string name, bool reflective, bool light) {
     this->name = name;
-    this->reflective = false;
+    this->reflective = reflective;
+    this->light = light;
 }
 
 string Material::getName() {
@@ -21,6 +23,10 @@ string Material::getName() {
 
 bool Material::isReflective() {
     return this->reflective;
+}
+
+bool Material::isLight() {
+    return this->light;
 }
 
 vec4 Material::getAlbedo() {
