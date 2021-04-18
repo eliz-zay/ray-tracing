@@ -88,8 +88,8 @@ void render(int width, int height, int fov) {
 }
 
 int main() {
-    const int width = 512;
-    const int height = 512;
+    const int width = 256;
+    const int height = 256;
     const int fov = M_PI / 2.;
 
     Material* glass = new Material("glass", vec4(0.0, 0.5, 0.1, 0.8), 125., 1.5);

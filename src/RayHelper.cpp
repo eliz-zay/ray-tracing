@@ -32,7 +32,7 @@ namespace RayHelper {
 
         float eta = etaIn / etaTarget;
 
-        float R0 = std::pow(eta - 1, 2) / std::powf(eta + 1, 2);
+        float R0 = std::pow(eta - 1, 2) / std::pow(eta + 1, 2);
 
         return R0 + (1 - R0) * std::pow(1 - cos, 5);
     }
