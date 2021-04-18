@@ -27,10 +27,12 @@ void toFile(int width, int height, vector<vec3> framebuffer) {
     file.open("./323_Zaydenvarg_v2v0.ppm");
     file << "P6\n" << width << " " << height << "\n255\n";
     for (size_t i = 0; i < width * height; i++) {
-        vec3  &c = framebuffer[i];
+        vec3 &c = framebuffer[i];
         float max = std::max(c[0], std::max(c[1], c[2]));
-        if (max>1) c = c*(1./max);
-        for (size_t j = 0; j < 3; j++) {
+        if (max > 1) {
+            c = c*(1./max);
+        }
+        for (int j = 0; j < 3; j++) {
             file << (char)(255 * std::max(0.f, std::min(1.f, framebuffer[i][j])));
         }
     }
@@ -46,7 +48,7 @@ void render(int width, int height, int fov) {
 
     int i, j;
 
-    #pragma omp parallel for num_threads(8)
+    #pragma omp parallel for private(i, j) num_threads(4)
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++) {
             float x =  (2 * (j + 0.5) / (float)width - 1) * tan(fov / 2.) * width / ((float)height);

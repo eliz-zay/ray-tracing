@@ -59,7 +59,7 @@ float Fire::signedDistance(const vec3 &pos) {
 }
 
 // Get normal
-vec3 Fire::distanceFieldNormal(const vec3 &pos) { // simple finite differences, very sensitive to the choice of the eps constant
+vec3 Fire::distanceFieldNormal(const vec3 &pos) {
     const float eps = 0.01;
     float d = signedDistance(pos);
     float nx = signedDistance(pos + vec3(eps, 0, 0)) - d;
@@ -83,7 +83,7 @@ float Fire::noise(const vec3 &u) {
                     lerp(sinHash(n + 170.f), sinHash(n + 171.f), f.x()), f.y()), f.z());
 }
 
-// Linear gradent yellow-orange-red-darkgray-gray. d is supposed to vary from 0 to 1
+// Linear gradent
 vec3 Fire::paletteFire(const float d) {
     const vec3    white(1.0, 1.0, 1.0);
     const vec3   yellow(1.9, 1.5, 1.0);
