@@ -24,7 +24,7 @@ using namespace std;
 
 void toFile(int width, int height, vector<vec3> framebuffer) {
     ofstream file;
-    file.open("./out.ppm");
+    file.open("./323_Zaydenvarg_v2v0.ppm");
     file << "P6\n" << width << " " << height << "\n255\n";
     for (size_t i = 0; i < width * height; i++) {
         vec3  &c = framebuffer[i];
@@ -41,12 +41,14 @@ void toFile(int width, int height, vector<vec3> framebuffer) {
 void render(int width, int height, int fov) {
     const float eps = 1.2;
     const int fogSamples = 8;
-    const int samplesNum = 2;
+    const int samplesNum = 3;
     vector<vec3> framebuffer(width * height);
 
-    #pragma omp parallel for
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
+    int i, j;
+
+    #pragma omp parallel for num_threads(8)
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++) {
             float x =  (2 * (j + 0.5) / (float)width - 1) * tan(fov / 2.) * width / ((float)height);
             float y = -(2 * (i + 0.5) / (float)height - 1) * tan(fov / 2.);
             vec3 dir = normalize(vec3(x, y - 0.2, -1));
@@ -55,21 +57,19 @@ void render(int width, int height, int fov) {
 
             if (!hitGlass) {
                 vec3 sumColor = directColor;
-                int sampleCount = 1;
                 for (int sample = 1; sample < samplesNum; sample++) {
                     float x =  ((2 * (j + 0.5) + eps * sample) / (float)width - 1) * tan(fov / 2.) * width / ((float)height);
                     float y = -((2 * (i + 0.5) + eps * sample) / (float)height - 1) * tan(fov / 2.);
                     vec3 dir = normalize(vec3(x, y - 0.2, -1));
                     sumColor += Scene::castRay(vec3(0, 2, 0), dir, &hitGlass);
-                    sampleCount++;
                 }
-                framebuffer[i * width + j] = sumColor / sampleCount;
+                framebuffer[i * width + j] = sumColor / samplesNum;
                 continue;
             }
 
-            vec3 sumColor;
-            int sampleCount = 0;
-            for (int sample = 0; sample < fogSamples; sample++) {
+            vec3 sumColor = directColor;
+            int sampleCount = 1;
+            for (int sample = 1; sample < fogSamples; sample++) {
                 float x =  ((2 * (j + 0.5) + eps * sample) / (float)width - 1) * tan(fov / 2.) * width / ((float)height);
                 float y = -((2 * (i + 0.5) + eps * sample) / (float)height - 1) * tan(fov / 2.);
                 vec3 dir = normalize(vec3(x, y - 0.2, -1));
@@ -87,10 +87,25 @@ void render(int width, int height, int fov) {
     toFile(width, height, framebuffer);
 }
 
-int main() {
-    const int width = 256;
-    const int height = 256;
+void parseArguments(int argc, char** argv, int* size) {
+    if (argc == 1 || argc == 2 && strcmp(argv[1], "-w") == 0) {
+        *size = 512;
+        return;
+    }
+    if (!(argc == 3 && strcmp(argv[1], "-w") == 0 && atoi(argv[2]) == 1024)) {
+        cout << "Required: zero arguments or \`-w 1024\`" << endl;
+        exit(0);
+    }
+    *size = 1024;
+}
+
+int main(int argc, char** argv) {
+    int size;
     const int fov = M_PI / 2.;
+
+    parseArguments(argc, argv, &size);
+    const int width = size;
+    const int height = size;
 
     Material* glass = new Material("glass", vec4(0.0, 0.5, 0.1, 0.8), 125., 1.5);
     Material* metallike = new Material("metallike", vec4(0.9, 0.1, 0., 0.0), 40., 1.);
@@ -104,7 +119,7 @@ int main() {
         vec3(-2, -1, -14),
         vec3(2, -1, -14),
         vec3(2, -1, -10),
-        vec3(0.1, 0.1, 0.1)        // color
+        vec3(0.1, 0.1, 0.1)   // color
     );
 
     Checkerboard* board = new Checkerboard(std::make_pair(vec3(1, 1, 1), vec3(0.1, 0, 0.05)), -1.5, 10, -50, -5);
@@ -121,7 +136,7 @@ int main() {
         vec3(0.12, 0., 0.05)
     );
 
-    Fire* fire = new Fire(vec3(0, 0.1, -12), 1);
+    Fire* fire = new Fire(vec3(0, 0.05, -12), 1);
 
     vec3 floor0 = vec3(-6, -2, -8), floor1 = vec3(-6, -2, -24), floor2 = vec3(6, -2, -24), floor3 = vec3(6, -2, -8);
     vec3 ceil0 = vec3(-6, 5, -8), ceil1 = vec3(-6, 5, -24), ceil2 = vec3(6, 5, -24), ceil3 = vec3(6, 5, -8);
@@ -130,9 +145,9 @@ int main() {
     Plane* wall2 = new Plane(floor1, ceil1, ceil2, floor2, vec3(0.05, 0.1, 0.15));
     Plane* wall3 = new Plane(floor2, ceil2, ceil3, floor3, vec3(0.05, 0.1, 0.15));
 
-    vec3 lightPos1(-1, 0, -9);
+    vec3 lightPos1(-1, 1, -9);
     vec3 lightPos2(4, 0, -20);
-    vec3 lightPos3(-2, 2, -12);
+    vec3 lightPos3(-5.5, -1.2, -14);
 
     LightSphere* lightSphere1 = new LightSphere(lightPos1, 0.2, 1);
     LightSphere* lightSphere2 = new LightSphere(lightPos2, 0.2, 2);
