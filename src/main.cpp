@@ -13,12 +13,12 @@
 #include "Scene.cpp"
 
 #include "Light.cpp"
+#include "LightSphere.cpp"
 #include "Pyramid.cpp"
 #include "Checkerboard.cpp"
 #include "Plane.cpp"
 #include "Stand.cpp"
 #include "Fire.cpp"
-#include "LightSphere.cpp"
 
 using namespace std;
 
@@ -107,15 +107,6 @@ int main() {
         vec3(0.1, 0.1, 0.1)        // color
     );
 
-    Pyramid* pyramid2 = new Pyramid(
-        vec3(1, 2, -20),
-        vec3(-1, 0, -18),
-        vec3(-1, -1, -22),
-        vec3(5, -1, -22),
-        vec3(5, 0, -18),
-        vec3(0.3, 0.1, 0.1)
-    );
-
     Checkerboard* board = new Checkerboard(std::make_pair(vec3(1, 1, 1), vec3(0.1, 0, 0.05)), -1.5, 10, -50, -5);
 
     Stand* stand = new Stand(
@@ -141,24 +132,28 @@ int main() {
 
     vec3 lightPos1(-1, 0, -9);
     vec3 lightPos2(4, 0, -20);
+    vec3 lightPos3(-2, 2, -12);
 
-    LightSphere* lightSphere2 = new LightSphere(lightPos1, 0.2, 0);
-    LightSphere* lightSphere3 = new LightSphere(lightPos2, 0.2, 1);
+    LightSphere* lightSphere1 = new LightSphere(lightPos1, 0.2, 1);
+    LightSphere* lightSphere2 = new LightSphere(lightPos2, 0.2, 2);
+    LightSphere* lightSphere3 = new LightSphere(lightPos3, 0.2, 3);
 
     pyramid->setMaterial(glass);
-    pyramid2->setMaterial(metallike);
     board->setMaterial(littleshiny);
     wall1->setMaterial(metallike);
     wall2->setMaterial(metallike);
     wall3->setMaterial(metallike);
     stand->setMaterial(littleshiny);
     fire->setMaterial(fireMaterial);
+    lightSphere1->setMaterial(lightMaterial);
     lightSphere2->setMaterial(lightMaterial);
     lightSphere3->setMaterial(lightMaterial);
 
-    Light* light2 = new Light(lightPos1, 1.3, 0);
-    Light* light3 = new Light(lightPos2, 2., 1);
+    Light* light1 = new Light(lightPos1, 1.3, 1);
+    Light* light2 = new Light(lightPos2, 2., 2);
+    Light* light3 = new Light(lightPos3, 1., 3);
 
+    Scene::addLight(light1);
     Scene::addLight(light2);
     Scene::addLight(light3);
 
@@ -169,6 +164,7 @@ int main() {
     Scene::addObject(wall3);
     Scene::addObject(stand);
     Scene::addObject(fire);
+    Scene::addObject(lightSphere1);
     Scene::addObject(lightSphere2);
     Scene::addObject(lightSphere3);
 

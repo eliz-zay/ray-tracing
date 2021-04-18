@@ -78,8 +78,9 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, bool* hitGlass, int depth = 0) {
         vec3 shadowHit, shadowNorm, tmpColor;
         Material* tmpMaterial;
         Object* tmpObj;
+        
         if (
-            Scene::intersect(&shadowOrig, &lightDir, &shadowHit, &shadowNorm, &tmpColor, &tmpMaterial, &tmpObj, depth) && 
+            Scene::intersect(&shadowOrig, &lightDir, &shadowHit, &shadowNorm, &tmpColor, &tmpMaterial, &tmpObj, depth, light->getIdx()) && 
             (shadowHit - shadowOrig).norm() < lightDistance &&
             // Enable a light shine through its own sphere
             !(tmpMaterial->isLight() && dynamic_cast<LightSphere*>(tmpObj)->getIdx() == light->getIdx())
@@ -98,7 +99,7 @@ vec3 Scene::castRay(vec3 origin, vec3 dir, bool* hitGlass, int depth = 0) {
         refractColor * albedo[3] * (1 - reflectWeight);
 }
 
-bool Scene::intersect(vec3* origin, vec3* dir, vec3* hit, vec3* normal, vec3* color, Material** material, Object** object, int depth) {
+bool Scene::intersect(vec3* origin, vec3* dir, vec3* hit, vec3* normal, vec3* color, Material** material, Object** object, int depth, int lightIdx) {
     float hitDist = numeric_limits<float>::max();
     bool hitScene = false;
     vec3 hitColor, hitNormal;
@@ -106,8 +107,13 @@ bool Scene::intersect(vec3* origin, vec3* dir, vec3* hit, vec3* normal, vec3* co
     Object* hitObj;
 
     for (Object* obj: Scene::objects) {
-        // Draw a light only at straight view but not after reflections/refractions
-        if (obj->getMaterial()->isLight() && depth > 0) {
+        // Draw a light only at straight view (depth == 0) and not as a shadow origin
+        if ( 
+            obj->getMaterial()->isLight() && (
+                depth > 0 || 
+                lightIdx != -1 && dynamic_cast<LightSphere*>(obj)->getIdx() != lightIdx
+            )
+        ) {
             continue;
         }
         vec3 iColor, iNormal;
