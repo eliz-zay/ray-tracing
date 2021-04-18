@@ -67,16 +67,8 @@ vec3 Fire::distanceFieldNormal(const vec3 &pos) { // simple finite differences, 
 
 // Noise function
 float Fire::brownianMotion(const vec3 &x) {
-    // rotate
     vec3 p = vec3(dot(vec3(0.00,  0.80,  0.60), x), dot(vec3(-0.80,  0.36, -0.48), x), dot(vec3(-0.60, -0.48,  0.64), x));
-    float f = 0;
-    f += 0.5000 * noise(p); p = p * 2.32;
-    f += 0.2500 * noise(p); p = p * 3.03;
-    f += 0.1250 * noise(p); p = p * 2.61;
-    f += 0.0625 * noise(p);
-    return f/0.9375;
-    // f = noise(x);
-    return f;
+    return noise(p);
 }
 
 float Fire::noise(const vec3 &v) {
@@ -95,8 +87,8 @@ float Fire::noise(const vec3 &v) {
 // Linear gradent yellow-orange-red-darkgray-gray. d is supposed to vary from 0 to 1
 vec3 Fire::paletteFire(const float d) {
     const vec3    white(1.0, 1.0, 1.0);
-    const vec3   yellow(1.7, 1.3, 1.0); // note that the color is "hot", i.e. has components >1
-    const vec3   orange(1.0, 0.6, 0.0);
+    const vec3   yellow(1.9, 1.5, 1.0);
+    const vec3   orange(1.2, 0.8, 0.0);
     const vec3      red(1.0, 0.0, 0.0);
     const vec3  darkred(0.7, 0.0, 0.0);
     const vec3  deepred(0.3, 0.0, 0.0);

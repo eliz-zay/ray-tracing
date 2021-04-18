@@ -47,9 +47,9 @@ void render(int width, int height, int fov) {
         for (int j = 0; j < width; j++) {
             float x =  (2 * (j + 0.5) / (float)width - 1) * tan(fov / 2.) * width / ((float)height);
             float y = -(2 * (i + 0.5) / (float)height - 1) * tan(fov / 2.);
-            vec3 dir = normalize(vec3(x, y, -1));
+            vec3 dir = normalize(vec3(x, y - 0.2, -1));
             bool hitGlass;
-            vec3 directColor = Scene::castRay(vec3(0, 0, 0), dir, &hitGlass);
+            vec3 directColor = Scene::castRay(vec3(0, 2, 0), dir, &hitGlass);
 
             if (!hitGlass) {
                 framebuffer[i * width + j] = directColor;
@@ -61,8 +61,8 @@ void render(int width, int height, int fov) {
             for (int sample = 0; sample < samplesPerPixel; sample++) {
                 float x =  ((2 * (j + 0.5) + eps * sample) / (float)width - 1) * tan(fov / 2.) * width / ((float)height);
                 float y = -((2 * (i + 0.5) + eps * sample) / (float)height - 1) * tan(fov / 2.);
-                vec3 dir = normalize(vec3(x, y, -1));
-                vec3 sampleColor = Scene::castRay(vec3(0, 0, 0), dir, &hitGlass);
+                vec3 dir = normalize(vec3(x, y - 0.2, -1));
+                vec3 sampleColor = Scene::castRay(vec3(0, 2, 0), dir, &hitGlass);
                 if (!hitGlass) { // if we moved and missed the glass
                     continue;
                 }
@@ -82,8 +82,9 @@ int main() {
     const int fov = M_PI / 2.;
 
     Material* glass = new Material("glass", vec4(0.0, 0.5, 0.1, 0.8), 125., 1.5);
-    Material* rubber = new Material("rubber", vec4(0.9,  0.1, 0.0, 0.0), 50., 1.);
-    Material* plastic = new Material("plastic", vec4(0.5, 0.4, 0.0, 0.0), 50., 1.);
+    Material* rubber = new Material("rubber", vec4(0.9,  0.1, 0.2, 0.0), 40., 1.);
+    Material* plastic = new Material("plastic", vec4(0.9, 0.4, 0.2, 0.0), 40., 1.);
+    Material* fireMaterial = new Material("fire");
 
     Pyramid* pyramid1 = new Pyramid(
         vec3(0, 3, -12),      // vertices
@@ -91,7 +92,7 @@ int main() {
         vec3(-2, -1, -14),
         vec3(2, -1, -14),
         vec3(2, -1, -10),
-        vec3(0, 0, 0.2)        // color
+        vec3(0.1, 0.1, 0.1)        // color
     );
 
     Pyramid* pyramid2 = new Pyramid(
@@ -104,10 +105,10 @@ int main() {
     );
 
     Checkerboard* board = new Checkerboard(
-        std::make_pair(vec3(1, 1, 1), vec3(1, .1, .3)), // colors
+        std::make_pair(vec3(1, 1, 1), vec3(0.1, 0, 0.05)), // colors
         -1.5,   // y
         10,     // x bounds
-        -40,    // z1
+        -100,    // z1
         -5      // z2
     );
 
@@ -120,34 +121,34 @@ int main() {
         vec3(-3, -1.1, -15),
         vec3(3, -1.1, -15),
         vec3(3, -1.1, -9),
-        vec3(0.2, 0., 0.3)
+        vec3(0.12, 0., 0.05)
     );
 
-    Fire* fire = new Fire(vec3(0, 0.3, -12), 1);
+    Fire* fire = new Fire(vec3(0, 0.1, -12), 1);
 
     vec3 floor0 = vec3(-6, -2, -8), floor1 = vec3(-6, -2, -24), floor2 = vec3(6, -2, -24), floor3 = vec3(6, -2, -8);
     vec3 ceil0 = vec3(-6, 5, -8), ceil1 = vec3(-6, 5, -24), ceil2 = vec3(6, 5, -24), ceil3 = vec3(6, 5, -8);
 
-    Plane* wall1 = new Plane(floor0, ceil0, ceil1, floor1, vec3(0.1, 0.2, 0.3));
-    Plane* wall2 = new Plane(floor1, ceil1, ceil2, floor2, vec3(0.1, 0.2, 0.3));
-    Plane* wall3 = new Plane(floor2, ceil2, ceil3, floor3, vec3(0.1, 0.2, 0.3));
+    Plane* wall1 = new Plane(floor0, ceil0, ceil1, floor1, vec3(0.05, 0.1, 0.15));
+    Plane* wall2 = new Plane(floor1, ceil1, ceil2, floor2, vec3(0.05, 0.1, 0.15));
+    Plane* wall3 = new Plane(floor2, ceil2, ceil3, floor3, vec3(0.05, 0.1, 0.15));
 
     pyramid1->setMaterial(glass);
     pyramid2->setMaterial(rubber);
-    board->setMaterial(plastic);
+    board->setMaterial(rubber);
     wall1->setMaterial(rubber);
     wall2->setMaterial(rubber);
     wall3->setMaterial(rubber);
     stand->setMaterial(plastic);
-    fire->setMaterial(new Material());
+    fire->setMaterial(fireMaterial);
 
-    Light* innerLight = new Light(vec3(0, 0, -12), 3.f);
-    Light* light2 = new Light(vec3(0, 3, -4), 4.f);
-    Light* light3 = new Light(vec3(0, 4, -10), 1.5);
+    Light* innerLight = new Light(vec3(0, 0, -12), 2.f);
+    Light* light2 = new Light(vec3(-5, 4, -9), 1.8);
+    Light* light3 = new Light(vec3(4, 0, -20), 1.5);
 
-    Scene::addLight(innerLight); 
+    Scene::addLight(innerLight);
     Scene::addLight(light2);
-    // Scene::addLight(light3);
+    Scene::addLight(light3);
 
     Scene::addObject(pyramid1);
     // Scene::addObject(pyramid2);

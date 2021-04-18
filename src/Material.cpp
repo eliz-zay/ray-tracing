@@ -10,7 +10,8 @@ Material::Material(string name, vec4 albedo, float specularExponent, float refra
     this->refractiveIdx = refractiveIdx;
 }
 
-Material::Material() {
+Material::Material(string name) {
+    this->name = name;
     this->reflective = false;
 }
 

@@ -34,6 +34,7 @@ class Pyramid: public Object {
         bool intersection(vec3 origin, vec3 dir, float* distance, vec3* color, vec3* normal);
 
         vec3 getNormal(int edgeIdx);
+        float getFogIntensity(vec3 hit);
 };
 
 #endif

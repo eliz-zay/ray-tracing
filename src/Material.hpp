@@ -17,7 +17,7 @@ class Material {
 
     public:
         Material(string name, vec4 albedo, float specularExp, float refractiveIdx, bool reflective);
-        Material(); // for non-reflective material
+        Material(string name); // for non-reflective material
 
         string getName();
         bool isReflective();

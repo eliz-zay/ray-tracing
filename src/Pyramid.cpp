@@ -69,3 +69,11 @@ vec3 Pyramid::getNormal(int edgeIdx) {
 
     return normalize(cross(A, B));
 }
+
+float Pyramid::getFogIntensity(vec3 hit) {
+    float hitLevel = hit.y();
+    float upperPoint = this->vertices.upper.y();
+    float baseLevel = this->vertices.base[0].y(); // all base vertices have the same level (y)
+
+    return (upperPoint - hitLevel) * 1.f / (upperPoint - baseLevel);
+}
